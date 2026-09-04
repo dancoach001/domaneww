@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Matches | Doma United FC</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="match.css">
+</head>
+
+<body>
+
+<!-- =========================
+     NAVIGATION
+========================= -->
+
+<nav class="navbar">
+
+    <a class="brand" href="index.html">
+
+        <img
+            src="images/logo.png"
+            alt="Doma United FC Logo"
+        >
+
+        <span>Doma United FC</span>
+
+    </a>
+
+    <button
+        class="menu-toggle"
+        aria-label="Open menu"
+    >
+        ☰
+    </button>
+
+    <div class="nav-links">
+
+        <a href="index.html">Home</a>
+
+        <a href="matches.html">Matches</a>
+
+        <a href="squad.html">Squad</a>
+
+        <a href="standings.html">Standings</a>
+
+        <a href="news.html">News</a>
+
+        <a href="gallery.html">Gallery</a>
+
+        <a href="about.html">About</a>
+
+    </div>
+
+</nav>
+
+
+<!-- =========================
+     PAGE HEADER
+========================= -->
+
+<header class="matches-header">
+
+    <span>MATCH CENTRE</span>
+
+    <h1>Fixtures & Results</h1>
+
+    <p>
+        Follow Doma United FC through every match,
+        fixture and result.
+    </p>
+
+</header>
+
+
+<main class="matches-page">
+
+<div class="matches-container">
+
+
+<!-- =========================
+     TABS
+========================= -->
+
+<div class="match-tabs">
+
+    <button
+        class="match-tab active"
+        onclick="showMatches('fixtures', this)"
+    >
+        Fixtures
+    </button>
+
+    <button
+        class="match-tab"
+        onclick="showMatches('results', this)"
+    >
+        Results
+    </button>
+
+</div>
+
+
+<!-- =====================================================
+     FIXTURES
+===================================================== -->
+
+<section id="fixtures" class="match-section">
+
+    <div class="match-section-title">
+
+        <div>
+
+            <span class="competition-title">
+                Upcoming Matches
+            </span>
+
+            <h2>Fixtures</h2>
+
+        </div>
+
+    </div>
+
+    <!-- REAL FIXTURES WILL BE INSERTED HERE BY JAVASCRIPT -->
+
+    <div id="fixturesList"></div>
+
+</section>
+
+
+<!-- =====================================================
+     RESULTS
+===================================================== -->
+
+<section id="results" class="match-section hidden">
+
+    <div class="match-section-title">
+
+        <div>
+
+            <span class="competition-title">
+                Completed Matches
+            </span>
+
+            <h2>Results</h2>
+
+        </div>
+
+    </div>
+
+    <!-- REAL RESULTS WILL BE INSERTED HERE BY JAVASCRIPT -->
+
+    <div id="resultsList"></div>
+
+</section>
+
+
+</div>
+
+</main>
+
+
+
+<!-- =========================
+     FOOTER
+========================= -->
+
+<footer class="footer">
+
+    <div>
+
+        <img
+            src="images/logo.png"
+            alt="Doma United FC Logo"
+        >
+
+        <h3>Doma United FC</h3>
+
+        <p>
+            The Savannah Tigers.
+        </p>
+
+    </div>
+
+
+    <div>
+
+        <h4>Quick Links</h4>
+
+        <a href="matches.html">
+            Matches
+        </a>
+
+        <a href="squad.html">
+            Squad
+        </a>
+
+        <a href="news.html">
+            News
+        </a>
+
+        <a href="gallery.html">
+            Gallery
+        </a>
+
+    </div>
+
+
+    <div>
+
+        <h4>Club</h4>
+
+        <a href="about.html">
+            About the Club
+        </a>
+
+        <a href="#">
+            Contact
+        </a>
+
+    </div>
+
+
+    <p class="copyright">
+
+        © <span id="year"></span>
+        Doma United FC.
+        All rights reserved.
+
+    </p>
+
+</footer>
+
+
+<script src="matches.js"></script>
+
+
+
+<script>
+
+    /* =========================
+       MOBILE MENU
+    ========================= */
+
+    const menuToggle =
+        document.querySelector(".menu-toggle");
+
+    const navLinks =
+        document.querySelector(".nav-links");
+
+
+    menuToggle.addEventListener("click", function () {
+
+        navLinks.classList.toggle("open");
+
+    });
+
+
+
+    /* =========================
+       FIXTURES / RESULTS
+    ========================= */
+
+    function showMatches(section, button) {
+
+        document
+            .querySelectorAll(".match-section")
+            .forEach(function (item) {
+
+                item.classList.add("hidden");
+
+            });
+
+
+        document
+            .getElementById(section)
+            .classList.remove("hidden");
+
+
+        document
+            .querySelectorAll(".match-tab")
+            .forEach(function (tab) {
+
+                tab.classList.remove("active");
+
+            });
+
+
+        button.classList.add("active");
+
+    }
+
+
+
+    /* =========================
+       CURRENT YEAR
+    ========================= */
+
+    document.getElementById("year").textContent =
+        new Date().getFullYear();
+
+</script>
+
+</body>
+</html>
