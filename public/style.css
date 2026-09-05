@@ -623,28 +623,3 @@
   object-fit: cover;
   display: block;
 }
-.section-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 24px;
-  width: 100%;
-}
-
-.section-heading > div {
-  display: block;
-}
-
-.section-heading span {
-  display: block;
-  margin-bottom: 6px;
-}
-
-.section-heading h2 {
-  display: block;
-  margin: 0;
-}
-
-.section-heading a {
-  display: inline-block;
-}
