@@ -38,6 +38,17 @@ function formatDate(dateString) {
         return 'Date TBC';
     }
 
+    const dateOnly = String(dateString).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+    if (dateOnly) {
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        return `${Number(dateOnly[3])} ${monthNames[Number(dateOnly[2]) - 1]} ${dateOnly[1]}`;
+    }
+
     const date = new Date(dateString);
 
     if (Number.isNaN(date.getTime())) {
@@ -183,8 +194,10 @@ function createTeamHTML(teamName) {
 
 function createMatchCard(match) {
 
+    const status = String(match.status || '').toLowerCase();
+
     const isFinished =
-        String(match.status || '').toLowerCase() === 'finished';
+        status === 'finished';
 
     const homeScore =
         match.score && match.score.home !== undefined
@@ -202,7 +215,9 @@ function createMatchCard(match) {
 
     const statusText = isFinished
         ? 'Full Time'
-        : 'Upcoming';
+        : status === 'postponed'
+            ? 'Postponed'
+            : 'Upcoming';
 
 
     const statusClass = isFinished
@@ -517,6 +532,18 @@ async function loadMatches() {
 
 
         state.allMatches = matches;
+
+
+        console.log(
+            'Doma United Matchday 2:',
+            state.allMatches.filter(match =>
+                String(match.matchday).includes('2') &&
+                (
+                    String(match.homeTeam).toLowerCase().includes('doma') ||
+                    String(match.awayTeam).toLowerCase().includes('doma')
+                )
+            )
+        );
 
 
         console.log(

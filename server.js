@@ -230,7 +230,7 @@ function parseEventText(rawText) {
 function extractScore(rawText) {
   if (!rawText) return null;
 
-  const match = rawText.match(/(\d+)\s*[-:–]\s*(\d+)/);
+  const match = rawText.match(/(\d+)\s*[-–]\s*(\d+)/);
   if (!match) return null;
 
   return {
@@ -242,6 +242,10 @@ function extractScore(rawText) {
 function inferStatus(match, rawText) {
   const text = (rawText || '').toLowerCase();
   const score = extractScore(rawText);
+
+  if (/postponed|cancelled|canceled/i.test(text)) {
+    return 'postponed';
+  }
 
   if (/ft|full[- ]time|finished|final/i.test(text) || score) {
     return 'finished';
