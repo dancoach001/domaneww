@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Doma United FC official-style football website template">
   <title>Gallery | Doma United FC</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tailwind.css">
 </head>
 <body>
 
@@ -29,7 +32,7 @@
 
 <main>
   <section class="page-header"><p>MEMORIES</p><h1>Gallery</h1><span>Add matchday and club photos here.</span></section>
-  <section class="section"><div class="gallery-grid">
+  <section class="section"><div id="galleryGrid" class="gallery-grid">
     <div class="gallery-item">PHOTO 01</div><div class="gallery-item">PHOTO 02</div><div class="gallery-item">PHOTO 03</div>
     <div class="gallery-item">PHOTO 04</div><div class="gallery-item">PHOTO 05</div><div class="gallery-item">PHOTO 06</div>
   </div></section>
@@ -57,6 +60,26 @@
   <p class="copyright">© <span id="year"></span> Doma United FC. All rights reserved.</p>
 </footer>
 
+<script>
+  (function renderSavedGallery() {
+    const grid = document.getElementById('galleryGrid');
+    let images = [];
+    try { images = JSON.parse(localStorage.getItem('domaGallery') || '[]'); } catch (error) { images = []; }
+    if (!grid || !Array.isArray(images) || !images.length) return;
+    const cards = images.map((item) => {
+      const card = document.createElement('div');
+      card.className = 'gallery-item overflow-hidden';
+      const image = document.createElement('img');
+      image.src = item.src || '';
+      image.alt = item.name || 'Doma United FC gallery image';
+      image.className = 'h-full w-full object-cover';
+      image.addEventListener('error', () => { card.replaceChildren(); card.textContent = 'PHOTO'; });
+      card.appendChild(image);
+      return card;
+    });
+    grid.prepend(...cards);
+  }());
+</script>
 <script src="matches.js" onload="initMobileMenu()"></script>
 </body>
 </html>

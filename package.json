@@ -4,7 +4,9 @@
   "description": "NPFL fixtures and Doma United dashboard powered by the official NPFL website.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build:css": "tailwindcss -i ./src/tailwind.css -o ./public/tailwind.css --minify",
+    "build": "npm run build:css"
   },
   "dependencies": {
     "axios": "^1.7.7",
@@ -12,5 +14,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
   }
 }

@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Doma United FC official-style football website template">
   <title>Home | Doma United FC</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tailwind.css">
 </head>
 <body>
 
@@ -50,18 +53,14 @@
     </div>
   </section>
 
-  <section class="section dark-section">
+  <section id="upcomingFixtureSection" class="section dark-section hidden">
     <div class="section-heading"><div><span>NEXT UP</span><h2>Upcoming Fixture</h2></div></div>
-    <div class="fixture">
-      <div><span>DATE</span><strong>05 Sept, 2026</strong></div>
-      <div class="fixture-teams"><div><img src="images/logo 3.png" alt="">Inter Lagos FC</div><b>VS</b><div><img src="images/logo 2.png" alt="">Doma United FC</div></div>
-      <a class="btn primary" href="matches.html">Details</a>
-    </div>
+    <div id="upcomingFixture" class="fixture"></div>
   </section>
 
 <section class="section">
     <div class="section-heading"><div><span>CLUB UPDATES</span><h2>Latest News</h2></div><a href="news.html">View all →</a></div>
-    <div class="news-grid">
+    <div id="latestNewsGrid" class="news-grid">
 
       <article class="news-card">
         <div class="news-image">
@@ -122,6 +121,91 @@
   <p class="copyright">© <span id="year"></span> Doma United FC. All rights reserved.</p>
 </footer>
 
+<script>
+  (function renderSavedFixture() {
+    const section = document.getElementById('upcomingFixtureSection');
+    const fixture = document.getElementById('upcomingFixture');
+    let matches = [];
+    try { matches = JSON.parse(localStorage.getItem('domaAdminMatches') || '[]'); } catch (error) { matches = []; }
+    if (!section || !fixture || !Array.isArray(matches)) return;
+
+    const now = new Date();
+    const upcoming = matches
+      .filter((match) => match.date && String(match.status || '').trim().toLowerCase() !== 'finished')
+      .map((match) => ({ match, date: new Date(`${match.date}T${match.time || '23:59'}:00`) }))
+      .filter((entry) => !Number.isNaN(entry.date.getTime()) && entry.date >= now)
+      .sort((a, b) => a.date - b.date)[0]?.match;
+    if (!upcoming) return;
+    section.classList.remove('hidden');
+
+    const logos = {
+      'doma united fc': 'images/logo 2.png', 'inter lagos fc': 'images/logo 3.png', 'inter lagos': 'images/logo 3.png', 'sporting lagos fc': 'images/logo 4.png',
+      'abia warriors fc': 'images/Abia%20Warriors%20FC.png', 'barau fc': 'images/Barau%20FC.png', 'bendel insurance fc': 'images/Bendel%20Insurance%20FC.png', 'enyimba fc': 'images/Enyimba%20FC.png', 'kano pillars fc': 'images/Kano%20Pillars%20FC.png', 'rangers international fc': 'images/Rangers%20International%20FC.png', 'rivers united fc': 'images/Rivers%20United%20FC.png', 'warri wolves': 'images/Warri%20Wolves.png'
+    };
+    const teamName = (value) => String(value || 'Team TBC');
+    const logoFor = (value) => logos[teamName(value).trim().toLowerCase()];
+    const makeTeam = (name) => {
+      const wrapper = document.createElement('div');
+      const logo = (name === upcoming.homeTeam ? upcoming.homeLogo : upcoming.awayLogo) || logoFor(name);
+      if (logo) {
+        const image = document.createElement('img');
+        image.src = logo;
+        image.alt = `${teamName(name)} logo`;
+        image.className = 'h-12 w-12 object-contain';
+        wrapper.appendChild(image);
+      } else {
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = teamName(name).split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'TBC';
+        wrapper.appendChild(badge);
+      }
+      const label = document.createTextNode(teamName(name));
+      wrapper.appendChild(label);
+      return wrapper;
+    };
+    const date = new Date(`${upcoming.date}T00:00:00`);
+    const dateText = Number.isNaN(date.getTime()) ? upcoming.date : date.toLocaleDateString('en-NG', { day: '2-digit', month: 'short', year: 'numeric' });
+    const dateBlock = document.createElement('div');
+    dateBlock.innerHTML = '<span>DATE</span>';
+    const dateValue = document.createElement('strong');
+    dateValue.textContent = dateText;
+    dateBlock.appendChild(dateValue);
+    const teams = document.createElement('div');
+    teams.className = 'fixture-teams';
+    const hasScores = upcoming.homeScore !== '' && upcoming.homeScore !== undefined && upcoming.awayScore !== '' && upcoming.awayScore !== undefined;
+    const result = String(upcoming.status || '').toLowerCase() === 'finished' || hasScores ? `${upcoming.homeScore ?? '-'} – ${upcoming.awayScore ?? '-'}` : 'VS';
+    teams.append(makeTeam(upcoming.homeTeam), document.createElement('b'), makeTeam(upcoming.awayTeam));
+    teams.children[1].textContent = result;
+    const meta = document.createElement('small');
+    meta.className = 'mt-2 block text-center text-[11px] font-semibold text-[#7d96b8]';
+    meta.textContent = [upcoming.time || 'Time TBC', upcoming.venue || 'Venue TBC'].join(' · ');
+    const details = document.createElement('a');
+    details.className = 'btn primary';
+    details.href = 'matches.html';
+    details.textContent = 'Details';
+    fixture.replaceChildren(dateBlock, teams, meta, details);
+  }());
+
+  (function renderSavedNews() {
+    const grid = document.getElementById('latestNewsGrid');
+    let posts = [];
+    try { posts = JSON.parse(localStorage.getItem('domaNews') || '[]'); } catch (error) { posts = []; }
+    if (!grid || !Array.isArray(posts) || !posts.length) return;
+    grid.replaceChildren(...posts.map((post) => {
+      const card = document.createElement('article');
+      card.className = 'news-card';
+      const image = document.createElement('div');
+      image.className = 'news-image';
+      if (post.coverImage) { const img = document.createElement('img'); img.src = post.coverImage; img.alt = post.headline || 'Doma United FC news'; image.appendChild(img); } else image.textContent = 'NEWS';
+      const content = document.createElement('div'); content.className = 'news-content';
+      const category = document.createElement('span'); category.textContent = post.category || 'Club';
+      const headline = document.createElement('h3'); headline.textContent = post.headline || 'Club update';
+      const summary = document.createElement('p'); summary.textContent = post.summary || post.content || '';
+      const date = document.createElement('small'); date.className = 'mt-3 block text-[11px] font-semibold text-[#7d96b8]'; date.textContent = post.savedAt ? new Date(post.savedAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently published';
+      content.append(category, headline, summary, date); card.append(image, content); return card;
+    }));
+  }());
+</script>
 <script src="matches.js" onload="initMobileMenu()"></script>
 </body>
 </html>

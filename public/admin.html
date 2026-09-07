@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Doma United FC content management dashboard">
+  <title>Admin Dashboard | Doma United FC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tailwind.css">
+</head>
+<body class="admin-page min-h-screen bg-[#f4f7fb] text-[#10284b]">
+  <div class="min-h-screen lg:flex">
+    <div id="sidebarOverlay" class="fixed inset-0 z-30 hidden bg-[#071b3a]/50 lg:hidden"></div>
+
+    <aside id="adminSidebar" class="fixed inset-y-0 left-0 z-40 flex w-[272px] -translate-x-full flex-col bg-[#071b3a] text-white shadow-2xl transition-transform duration-300 lg:static lg:translate-x-0">
+      <div class="flex items-center gap-3 border-b border-white/10 px-7 py-6">
+        <img src="images/logo.png" alt="Doma United FC logo" class="h-11 w-11 object-contain">
+        <div>
+          <p class="text-sm font-black uppercase tracking-[1px]">Doma United</p>
+          <p class="mt-1 text-[10px] font-bold uppercase tracking-[2px] text-[#8db8ff]">Club admin</p>
+        </div>
+      </div>
+      <nav class="flex-1 space-y-1 px-4 py-6" aria-label="Admin navigation">
+        <p class="px-3 pb-3 text-[10px] font-black uppercase tracking-[2px] text-[#6985af]">Workspace</p>
+        <a href="#dashboard" class="admin-nav-link flex items-center gap-3 rounded-lg bg-[#2161c7] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[#061631]/20" data-section="dashboard"><span class="text-base">▦</span>Dashboard</a>
+        <a href="#matches" class="admin-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/65 transition hover:bg-white/10 hover:text-white" data-section="matches"><span class="text-base">◷</span>Matches</a>
+        <a href="#news" class="admin-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/65 transition hover:bg-white/10 hover:text-white" data-section="news"><span class="text-base">▤</span>News</a>
+        <a href="#gallery" class="admin-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/65 transition hover:bg-white/10 hover:text-white" data-section="gallery"><span class="text-base">▧</span>Gallery</a>
+        <a href="#squad" class="admin-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/65 transition hover:bg-white/10 hover:text-white" data-section="squad"><span class="text-base">♙</span>Squad</a>
+        <p class="px-3 pb-3 pt-8 text-[10px] font-black uppercase tracking-[2px] text-[#6985af]">System</p>
+        <a href="#settings" class="admin-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/65 transition hover:bg-white/10 hover:text-white" data-section="settings"><span class="text-base">⚙</span>Settings</a>
+        <a href="index.html" class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/65 transition hover:bg-white/10 hover:text-white"><span class="text-base">↗</span>View Website</a>
+      </nav>
+      <div class="border-t border-white/10 p-5">
+        <div class="flex items-center gap-3 rounded-lg bg-white/5 p-3">
+          <div class="grid h-9 w-9 place-items-center rounded-full bg-[#4e8cf0] text-xs font-black">AD</div>
+          <div class="min-w-0"><p class="truncate text-xs font-bold">Club administrator</p><p class="text-[10px] text-white/45">Content team</p></div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="min-w-0 flex-1">
+      <header class="sticky top-0 z-20 flex h-[76px] items-center justify-between border-b border-[#dbe7f7] bg-white/90 px-5 shadow-sm backdrop-blur sm:px-8">
+        <div class="flex items-center gap-4">
+          <button id="sidebarToggle" class="grid h-10 w-10 place-items-center rounded-lg border border-[#dbe7f7] text-lg text-[#0a2550] lg:hidden" aria-label="Open admin menu">☰</button>
+          <div><p class="text-[10px] font-black uppercase tracking-[2px] text-[#2161c7]">Doma United FC</p><h1 class="text-lg font-black text-[#0a2550] sm:text-xl">Content dashboard</h1></div>
+        </div>
+        <div class="flex items-center gap-3"><span class="hidden rounded-full bg-[#e6f0ff] px-3 py-1.5 text-[11px] font-bold text-[#2161c7] sm:inline-flex">Draft mode</span><a href="index.html" class="grid h-10 w-10 place-items-center rounded-lg border border-[#dbe7f7] text-[#2161c7] transition hover:bg-[#eef5ff]" title="View website" aria-label="View website">↗</a></div>
+      </header>
+
+      <main class="mx-auto max-w-[1500px] space-y-8 px-5 py-7 sm:px-8 lg:px-10 lg:py-10">
+        <div id="notice" class="hidden rounded-lg border border-[#b9d5fa] bg-[#e8f2ff] px-4 py-3 text-sm font-bold text-[#1850a4]" role="status"></div>
+
+        <section id="dashboard" class="admin-section space-y-7">
+          <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p class="text-xs font-black uppercase tracking-[2px] text-[#2161c7]">Overview</p><h2 class="mt-2 text-3xl font-black tracking-[-1px] text-[#0a2550]">Good afternoon, admin.</h2><p class="mt-2 text-sm text-[#6d83a2]">Keep the Savannah Tigers' digital home current and matchday-ready.</p></div><span class="text-xs font-semibold text-[#7d96b8]">September 6, 2026</span></div>
+          <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div class="rounded-xl border border-[#dbe7f7] bg-white p-5 shadow-[0_10px_25px_rgba(24,70,130,.06)]"><div class="flex items-center justify-between"><span id="upcomingCount" class="text-2xl font-black text-[#2161c7]">0</span><span class="rounded-lg bg-[#e8f2ff] px-2 py-1 text-xs text-[#2161c7]">◷</span></div><p class="mt-5 text-xs font-bold uppercase tracking-[1px] text-[#7d96b8]">Upcoming matches</p><p class="mt-1 text-[11px] text-[#9aacc4]">Saved locally</p></div>
+            <div class="rounded-xl border border-[#dbe7f7] bg-white p-5 shadow-[0_10px_25px_rgba(24,70,130,.06)]"><div class="flex items-center justify-between"><span id="resultsCount" class="text-2xl font-black text-[#0a2550]">0</span><span class="rounded-lg bg-[#eef5ff] px-2 py-1 text-xs text-[#2161c7]">✓</span></div><p class="mt-5 text-xs font-bold uppercase tracking-[1px] text-[#7d96b8]">Recent results</p><p class="mt-1 text-[11px] text-[#9aacc4]">Saved locally</p></div>
+            <div class="rounded-xl border border-[#dbe7f7] bg-white p-5 shadow-[0_10px_25px_rgba(24,70,130,.06)]"><div class="flex items-center justify-between"><span id="newsCount" class="text-2xl font-black text-[#0a2550]">0</span><span class="rounded-lg bg-[#eef5ff] px-2 py-1 text-xs text-[#2161c7]">▤</span></div><p class="mt-5 text-xs font-bold uppercase tracking-[1px] text-[#7d96b8]">Published news</p><p class="mt-1 text-[11px] text-[#9aacc4]">Saved locally</p></div>
+            <div class="rounded-xl border border-[#dbe7f7] bg-white p-5 shadow-[0_10px_25px_rgba(24,70,130,.06)]"><div class="flex items-center justify-between"><span id="playersCount" class="text-2xl font-black text-[#0a2550]">0</span><span class="rounded-lg bg-[#eef5ff] px-2 py-1 text-xs text-[#2161c7]">♙</span></div><p class="mt-5 text-xs font-bold uppercase tracking-[1px] text-[#7d96b8]">Squad members</p><p class="mt-1 text-[11px] text-[#9aacc4]">Saved locally</p></div>
+            <div class="rounded-xl border border-[#dbe7f7] bg-white p-5 shadow-[0_10px_25px_rgba(24,70,130,.06)]"><div class="flex items-center justify-between"><span id="galleryCount" class="text-2xl font-black text-[#0a2550]">0</span><span class="rounded-lg bg-[#eef5ff] px-2 py-1 text-xs text-[#2161c7]">▧</span></div><p class="mt-5 text-xs font-bold uppercase tracking-[1px] text-[#7d96b8]">Gallery images</p><p class="mt-1 text-[11px] text-[#9aacc4]">Saved locally</p></div>
+          </div>
+          <div class="grid gap-6 xl:grid-cols-[1.35fr_1fr]">
+            <div class="rounded-xl border border-[#dbe7f7] bg-white p-6 shadow-[0_10px_28px_rgba(24,70,130,.06)]"><div class="flex items-center justify-between"><div><p class="text-xs font-black uppercase tracking-[1.5px] text-[#2161c7]">Next fixture</p><h3 class="mt-1 text-xl font-black text-[#0a2550]">Matchday preview</h3></div><span class="rounded-full bg-[#e6f0ff] px-3 py-1 text-[10px] font-black uppercase text-[#2161c7]">Upcoming</span></div><div class="mt-6 flex items-center justify-between rounded-lg bg-[#f4f7fb] p-5"><div class="text-center"><img src="images/logo 3.png" alt="Inter Lagos FC" class="mx-auto h-14 w-14 object-contain"><p class="mt-2 max-w-24 text-xs font-bold text-[#17345e]">Inter Lagos FC</p></div><div class="text-center"><p class="text-[10px] font-black uppercase tracking-[1px] text-[#7d96b8]">05 Sept, 2026</p><p class="my-1 text-2xl font-black text-[#2161c7]">VS</p><p class="text-[11px] font-semibold text-[#7d96b8]">Mobolaji Johnson Arena</p></div><div class="text-center"><img src="images/logo 2.png" alt="Doma United FC" class="mx-auto h-14 w-14 object-contain"><p class="mt-2 max-w-24 text-xs font-bold text-[#17345e]">Doma United FC</p></div></div></div>
+            <div class="rounded-xl border border-[#dbe7f7] bg-white p-6 shadow-[0_10px_28px_rgba(24,70,130,.06)]"><div class="flex items-center justify-between"><div><p class="text-xs font-black uppercase tracking-[1.5px] text-[#2161c7]">Recent activity</p><h3 class="mt-1 text-xl font-black text-[#0a2550]">Content pulse</h3></div><span class="text-xs font-bold text-[#7d96b8]">Local browser</span></div><div id="activityList" class="mt-5 space-y-4 text-sm"></div></div>
+          </div>
+        </section>
+
+        <section id="matches" class="admin-section hidden space-y-6"><div><p class="text-xs font-black uppercase tracking-[2px] text-[#2161c7]">Match centre</p><h2 class="mt-2 text-3xl font-black text-[#0a2550]">Add or edit match</h2><p class="mt-2 text-sm text-[#6d83a2]">Match data is saved only in this browser until a backend is added.</p></div><form id="matchForm" class="admin-form rounded-xl border border-[#dbe7f7] bg-white p-6 shadow-[0_12px_30px_rgba(24,70,130,.06)]"><input type="hidden" name="id"><div class="grid gap-5 md:grid-cols-2"><label class="field">Home team<input name="homeTeam" required value="Doma United FC" placeholder="Home team"></label><label class="field">Away team<input name="awayTeam" required placeholder="Away team"></label><label class="field">Date<input name="date" type="date" required></label><label class="field">Time<input name="time" type="time"></label><label class="field">Venue<input name="venue" placeholder="Match venue"></label><label class="field">Match status<select name="status"><option>Upcoming</option><option>Finished</option><option>Postponed</option></select></label><label class="field">Home score<input name="homeScore" type="number" min="0" placeholder="- "></label><label class="field">Away score<input name="awayScore" type="number" min="0" placeholder="- "></label></div><div class="mt-7 flex flex-wrap justify-end gap-3"><button type="button" class="rounded-lg border border-[#cbdcf0] px-5 py-3 text-xs font-black uppercase tracking-[.7px] text-[#2161c7]" data-clear>Clear</button><button class="rounded-lg bg-[#2161c7] px-5 py-3 text-xs font-black uppercase tracking-[.7px] text-white shadow-lg shadow-[#2161c7]/20 transition hover:bg-[#1850a4]">Save match</button></div></form><div id="matchList" class="space-y-3"></div></section>
+
+        <section id="news" class="admin-section hidden space-y-6"><div><p class="text-xs font-black uppercase tracking-[2px] text-[#2161c7]">Editorial</p><h2 class="mt-2 text-3xl font-black text-[#0a2550]">Create news</h2><p class="mt-2 text-sm text-[#6d83a2]">Published items stay in this browser and do not appear on the public site.</p></div><form id="newsForm" class="admin-form rounded-xl border border-[#dbe7f7] bg-white p-6 shadow-[0_12px_30px_rgba(24,70,130,.06)]"><input type="hidden" name="id"><div class="grid gap-5 md:grid-cols-2"><label class="field md:col-span-2">Headline<input name="headline" required placeholder="Write a clear, engaging headline"></label><label class="field">Category<select name="category"><option>Club</option><option>Matchday</option><option>Team</option><option>Community</option></select></label><label class="field">Cover image<input id="newsCoverInput" name="coverImage" type="file" accept="image/*" class="file-input"><span id="newsCoverStatus" class="mt-2 block text-[11px] font-semibold text-[#7d96b8]">Optional. Images are resized before browser-only storage.</span></label><div class="md:col-span-2"><div id="newsCoverPreview" class="hidden max-w-[360px] overflow-hidden rounded-lg border border-[#dbe7f7] bg-[#f4f7fb] p-2"><img class="h-44 w-full rounded-md object-cover" alt="News cover preview"></div></div><label class="field md:col-span-2">Summary<textarea name="summary" rows="3" placeholder="Short summary for cards and social previews"></textarea></label><label class="field md:col-span-2">Article content<textarea name="content" rows="8" placeholder="Write the full article content here"></textarea></label></div><div class="mt-7 flex justify-end"><button class="rounded-lg bg-[#2161c7] px-5 py-3 text-xs font-black uppercase tracking-[.7px] text-white shadow-lg shadow-[#2161c7]/20 transition hover:bg-[#1850a4]">Publish news</button></div></form><div id="newsList" class="grid gap-4 lg:grid-cols-2"></div></section>
+
+        <section id="gallery" class="admin-section hidden space-y-6"><div><p class="text-xs font-black uppercase tracking-[2px] text-[#2161c7]">Media library</p><h2 class="mt-2 text-3xl font-black text-[#0a2550]">Gallery upload</h2><p class="mt-2 text-sm text-[#6d83a2]">Images are stored as local browser previews only.</p></div><div id="dropZone" class="rounded-xl border-2 border-dashed border-[#9abff5] bg-white p-8 text-center transition hover:border-[#2161c7] hover:bg-[#f7faff]"><input id="galleryInput" type="file" accept="image/*" multiple class="hidden"><div class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#e8f2ff] text-2xl text-[#2161c7]">↑</div><h3 class="mt-4 font-black text-[#0a2550]">Drop matchday images here</h3><p class="mt-1 text-sm text-[#7d96b8]">PNG, JPG or WEBP up to 10MB each</p><button id="browseGallery" type="button" class="mt-5 rounded-lg bg-[#2161c7] px-5 py-3 text-xs font-black uppercase tracking-[.7px] text-white">Choose images</button></div><div id="galleryPreview" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"></div></section>
+
+        <section id="squad" class="admin-section hidden space-y-6"><div><p class="text-xs font-black uppercase tracking-[2px] text-[#2161c7]">First team</p><h2 class="mt-2 text-3xl font-black text-[#0a2550]">Squad management</h2><p class="mt-2 text-sm text-[#6d83a2]">Player profiles are saved only for this browser.</p></div><form id="playerForm" class="admin-form rounded-xl border border-[#dbe7f7] bg-white p-6 shadow-[0_12px_30px_rgba(24,70,130,.06)]"><input type="hidden" name="id"><div class="grid gap-5 md:grid-cols-2"><label class="field">Player name<input name="playerName" required placeholder="Full name"></label><label class="field">Squad number<input name="number" type="number" min="1" max="99" placeholder="10"></label><label class="field">Position<select name="position"><option>Goalkeeper</option><option>Defender</option><option>Midfielder</option><option>Forward</option></select></label><label class="field">Player status<select name="status"><option>Starting XI</option><option>Substitute</option></select></label><label class="field">Player photo<input id="playerPhotoInput" name="photo" type="file" accept="image/*" class="file-input"><span id="playerPhotoStatus" class="mt-2 block text-[11px] font-semibold text-[#7d96b8]">Optional. Images are resized before browser-only storage.</span></label><div class="md:col-span-2"><div id="playerPhotoPreview" class="hidden max-w-[240px] overflow-hidden rounded-lg border border-[#dbe7f7] bg-[#f4f7fb] p-2"><img class="h-40 w-full rounded-md object-cover" alt="Selected player preview"></div></div><label class="field md:col-span-2">Bio<textarea name="bio" rows="5" placeholder="Player biography and profile notes"></textarea></label></div><div class="mt-7 flex justify-end"><button class="rounded-lg bg-[#2161c7] px-5 py-3 text-xs font-black uppercase tracking-[.7px] text-white shadow-lg shadow-[#2161c7]/20 transition hover:bg-[#1850a4]">Save player</button></div></form><div id="playerList" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3"></div></section>
+
+        <section id="settings" class="admin-section hidden space-y-6"><div><p class="text-xs font-black uppercase tracking-[2px] text-[#2161c7]">Workspace</p><h2 class="mt-2 text-3xl font-black text-[#0a2550]">Settings</h2></div><div class="rounded-xl border border-[#dbe7f7] bg-white p-6 shadow-[0_12px_30px_rgba(24,70,130,.06)]"><div class="flex items-center justify-between border-b border-[#e3edf8] py-4"><div><p class="font-bold text-[#17345e]">Browser-only storage</p><p class="max-w-xl text-xs text-[#7d96b8]">All admin data is saved only in this current browser. It will not appear for other users or on the public website until a backend or database is added later.</p></div><span class="rounded-full bg-[#e6f0ff] px-3 py-1 text-[10px] font-black uppercase text-[#2161c7]">Local only</span></div><div class="flex items-center justify-between py-4"><div><p class="font-bold text-[#17345e]">Clear saved content</p><p class="text-xs text-[#7d96b8]">Remove players, news, matches, gallery images, and drafts from this device.</p></div><button id="clearDrafts" class="rounded-lg border border-[#cbdcf0] px-4 py-2 text-xs font-black uppercase tracking-[.6px] text-[#2161c7]">Clear all data</button></div></div></section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const sidebar = document.getElementById('adminSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const notice = document.getElementById('notice');
+    const collections = { players: 'domaPlayers', news: 'domaNews', matches: 'domaAdminMatches', gallery: 'domaGallery' };
+    const draftKey = 'domaAdminDrafts';
+    const state = { players: read('players'), news: read('news'), matches: read('matches'), gallery: read('gallery') };
+    let playerPhotoData = '';
+    let newsCoverData = '';
+
+    function read(type) {
+      try { return JSON.parse(localStorage.getItem(collections[type]) || '[]'); } catch (error) { return []; }
+    }
+    function write(type) { localStorage.setItem(collections[type], JSON.stringify(state[type])); }
+    function uid() { return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
+    function escapeHTML(value = '') { return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character])); }
+    const teamLogoFiles = ['Abia Warriors FC.png', 'Barau FC.png', 'Bendel Insurance FC.png', 'Doma United FC.png', 'Enyimba FC.png', 'Ikorodu City FC.png', 'Inter Lagos.png', 'Kano Pillars FC.png', 'Katsina United FC.png', 'Kun Khalifat FC.png', 'Kwara United FC.png', 'Nasarawa United FC.png', 'Niger Tornadoes FC.png', 'Plateau United FC.png', 'Ranchers Bees.png', 'Rangers International FC.png', 'Rivers United FC.png', 'Shooting Stars Sports Club (3SC).png', 'Sporting Lagos FC.png', 'Warri Wolves.png'];
+    function normalizeTeamName(value = '') { return String(value).replace(/&/g, ' and ').replace(/[-_]+/g, ' ').replace(/\bFootball Club\b/gi, '').replace(/\bSports Club\b/gi, '').replace(/\bFC\b/gi, '').replace(/\bSC\b/gi, '').replace(/[^a-zA-Z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase(); }
+    const teamLogos = new Map(teamLogoFiles.map((filename) => [normalizeTeamName(filename.replace(/\.png$/i, '')), `images/${encodeURIComponent(filename)}`]));
+    function getTeamLogo(teamName) { return teamLogos.get(normalizeTeamName(teamName)) || ''; }
+    function teamBadge(teamName) { return normalizeTeamName(teamName).split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'TBC'; }
+    function showNotice(message, error = false) {
+      notice.textContent = message;
+      notice.className = `rounded-lg border px-4 py-3 text-sm font-bold ${error ? 'border-[#f3b4b4] bg-[#fff0f0] text-[#a53b3b]' : 'border-[#b9d5fa] bg-[#e8f2ff] text-[#1850a4]'}`;
+      window.setTimeout(() => notice.classList.add('hidden'), 3600);
+    }
+    function setSidebar(open) { sidebar.classList.toggle('-translate-x-full', !open); overlay.classList.toggle('hidden', !open); }
+    document.getElementById('sidebarToggle').addEventListener('click', () => setSidebar(true));
+    overlay.addEventListener('click', () => setSidebar(false));
+
+    function formValues(form) {
+      const values = {};
+      Array.from(form.elements).forEach((field) => { if (field.name && field.type !== 'file') values[field.name] = field.value.trim(); });
+      return values;
+    }
+    function saveDraft(form) {
+      const drafts = JSON.parse(localStorage.getItem(draftKey) || '{}');
+      drafts[form.getAttribute('id')] = formValues(form);
+      localStorage.setItem(draftKey, JSON.stringify(drafts));
+    }
+    function clearForm(form) { form.reset(); form.elements.id.value = ''; if (form.elements.homeTeam) form.elements.homeTeam.value = 'Doma United FC'; }
+    function loadDraft(form) {
+      const drafts = JSON.parse(localStorage.getItem(draftKey) || '{}');
+      Object.entries(drafts[form.getAttribute('id')] || {}).forEach(([name, value]) => { if (form.elements[name]) form.elements[name].value = value; });
+    }
+    function upsert(type, values) {
+      const index = state[type].findIndex((item) => item.id === values.id);
+      const item = { ...values, id: values.id || uid(), savedAt: new Date().toISOString() };
+      if (index >= 0) state[type][index] = item; else state[type].unshift(item);
+      write(type); return item;
+    }
+    function removeItem(type, id) { state[type] = state[type].filter((item) => item.id !== id); write(type); renderAll(); showNotice('Item deleted from this browser.'); }
+    function editItem(type, id) {
+      const item = state[type].find((entry) => entry.id === id); if (!item) return;
+      const form = document.getElementById(type === 'players' ? 'playerForm' : type === 'news' ? 'newsForm' : 'matchForm');
+      Object.entries(item).forEach(([name, value]) => { if (form.elements[name] && form.elements[name].type !== 'file') form.elements[name].value = value; });
+      if (type === 'players') { playerPhotoData = item.photo || ''; updatePlayerPhotoPreview(playerPhotoData); }
+      if (type === 'news') { newsCoverData = item.coverImage || ''; updateNewsCoverPreview(newsCoverData); }
+      if (type === 'gallery') { const nextName = window.prompt('Gallery image name', item.name || 'Gallery image'); if (nextName && nextName.trim()) { item.name = nextName.trim(); write('gallery'); renderAll(); showNotice('Gallery item updated in this browser.'); } return; }
+      document.querySelector(`[data-section="${type === 'players' ? 'squad' : type}"]`).click();
+      showNotice('Loaded item for editing. Save to update it.');
+    }
+    function actions(type, id) { return `<div class="flex shrink-0 gap-2"><button type="button" class="edit-item rounded-md border border-[#cbdcf0] px-3 py-2 text-[10px] font-black uppercase text-[#2161c7]" data-type="${type}" data-id="${id}">Edit</button><button type="button" class="delete-item rounded-md border border-[#f0cccc] px-3 py-2 text-[10px] font-black uppercase text-[#a53b3b]" data-type="${type}" data-id="${id}">Delete</button></div>`; }
+    function empty(message) { return `<div class="rounded-xl border border-dashed border-[#cbdcf0] bg-white p-6 text-sm text-[#7d96b8]">${message}</div>`; }
+
+    function renderMatches() {
+      const list = document.getElementById('matchList');
+      list.innerHTML = state.matches.length ? state.matches.map((item) => {
+        const hasScores = item.homeScore !== '' && item.homeScore !== undefined && item.awayScore !== '' && item.awayScore !== undefined;
+        const finished = String(item.status || '').toLowerCase() === 'finished';
+        const homeLogo = item.homeLogo || getTeamLogo(item.homeTeam);
+        const awayLogo = item.awayLogo || getTeamLogo(item.awayTeam);
+        const logo = (path, name) => path ? `<img src="${escapeHTML(path)}" alt="${escapeHTML(name)} logo" class="h-10 w-10 object-contain">` : `<span class="grid h-10 w-10 place-items-center rounded-full bg-[#e8f2ff] text-[10px] font-black text-[#2161c7]">${teamBadge(name)}</span>`;
+        const result = finished || hasScores ? `${escapeHTML(item.homeScore ?? '-')} – ${escapeHTML(item.awayScore ?? '-')}` : 'VS';
+        return `<article class="flex flex-col justify-between gap-4 rounded-xl border border-[#dbe7f7] bg-white p-5 shadow-sm sm:flex-row sm:items-center"><div class="min-w-0 flex-1"><p class="text-xs font-black uppercase tracking-[1px] text-[#2161c7]">${escapeHTML(item.status)} · ${escapeHTML(item.date)}</p><div class="mt-3 flex items-center gap-3"><div class="flex min-w-0 items-center gap-2">${logo(homeLogo, item.homeTeam)}<b class="truncate text-sm text-[#0a2550]">${escapeHTML(item.homeTeam)}</b></div><strong class="shrink-0 text-sm text-[#2161c7]">${result}</strong><div class="flex min-w-0 items-center gap-2">${logo(awayLogo, item.awayTeam)}<b class="truncate text-sm text-[#0a2550]">${escapeHTML(item.awayTeam)}</b></div></div><p class="mt-2 text-xs text-[#7d96b8]">${escapeHTML(item.time || 'Time TBC')} · ${escapeHTML(item.venue || 'Venue TBC')}</p></div>${actions('matches', item.id)}</article>`;
+      }).join('') : empty('No saved matches yet. Add your first fixture above.');
+    }
+    function renderNews() {
+      const list = document.getElementById('newsList');
+      list.innerHTML = state.news.length ? state.news.map((item) => `<article class="overflow-hidden rounded-xl border border-[#dbe7f7] bg-white shadow-sm">${item.coverImage ? `<img src="${item.coverImage}" alt="" class="h-36 w-full object-cover">` : ''}<div class="flex items-start justify-between gap-4 p-5"><div><p class="text-[10px] font-black uppercase tracking-[1px] text-[#2161c7]">${escapeHTML(item.category)}</p><h3 class="mt-1 font-black text-[#0a2550]">${escapeHTML(item.headline)}</h3><p class="mt-2 text-xs text-[#6d83a2]">${escapeHTML(item.summary || 'No summary added.')}</p><small class="mt-2 block text-[11px] font-semibold text-[#7d96b8]">${item.savedAt ? new Date(item.savedAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently published'}</small></div>${actions('news', item.id)}</div></article>`).join('') : empty('No published news yet. Create an article above.');
+    }
+    function renderPlayers() {
+      const list = document.getElementById('playerList');
+      list.innerHTML = state.players.length ? state.players.map((item) => `<article class="flex gap-4 rounded-xl border border-[#dbe7f7] bg-white p-4 shadow-sm">${item.photo ? `<img src="${item.photo}" alt="${escapeHTML(item.playerName)}" class="h-16 w-16 rounded-lg object-cover">` : '<div class="grid h-16 w-16 shrink-0 place-items-center rounded-lg bg-[#e8f2ff] text-xl font-black text-[#2161c7]">♙</div>'}<div class="min-w-0 flex-1"><div class="flex items-start justify-between gap-3"><div><h3 class="font-black text-[#0a2550]">${escapeHTML(item.playerName)}</h3><p class="text-xs font-bold text-[#2161c7]">#${escapeHTML(item.number || '-')} · ${escapeHTML(item.position)}</p><span class="mt-1 inline-block rounded-full bg-[#eef5ff] px-2 py-1 text-[10px] font-black uppercase tracking-[.5px] text-[#2161c7]">${escapeHTML(item.status || 'Starting XI')}</span></div>${actions('players', item.id)}</div><p class="mt-2 line-clamp-2 text-xs text-[#6d83a2]">${escapeHTML(item.bio || 'No bio added.')}</p></div></article>`).join('') : empty('No saved players yet. Add a squad profile above.');
+    }
+    function renderGallery() {
+      const preview = document.getElementById('galleryPreview');
+      preview.innerHTML = state.gallery.length ? state.gallery.map((item) => `<article class="overflow-hidden rounded-xl border border-[#dbe7f7] bg-white shadow-sm"><img src="${item.src}" alt="${escapeHTML(item.name)}" class="h-36 w-full object-cover"><div class="flex items-center justify-between gap-2 p-3"><span class="truncate text-xs font-bold text-[#17345e]">${escapeHTML(item.name)}</span>${actions('gallery', item.id)}</div></article>`).join('') : empty('No gallery images saved yet. Choose or drop images above.');
+    }
+    function renderDashboard() {
+      document.getElementById('upcomingCount').textContent = state.matches.filter((item) => item.status === 'Upcoming').length;
+      document.getElementById('resultsCount').textContent = state.matches.filter((item) => item.status === 'Finished').length;
+      document.getElementById('newsCount').textContent = state.news.length;
+      document.getElementById('playersCount').textContent = state.players.length;
+      document.getElementById('galleryCount').textContent = state.gallery.length;
+      const activity = [...state.news.map((item) => ['News published', item.headline]), ...state.players.map((item) => ['Player added', item.playerName]), ...state.matches.map((item) => ['Match saved', `${item.homeTeam} vs ${item.awayTeam}`]), ...state.gallery.map((item) => ['Gallery image added', item.name])].slice(0, 5);
+      document.getElementById('activityList').innerHTML = activity.length ? activity.map((entry) => `<p class="flex items-start gap-3"><span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#2161c7]"></span><span><b class="text-[#17345e]">${escapeHTML(entry[0])}</b><span class="block truncate text-xs text-[#7d96b8]">${escapeHTML(entry[1])}</span></span></p>`).join('') : empty('No local activity yet. Saved items will appear here.');
+    }
+    function renderAll() { renderMatches(); renderNews(); renderPlayers(); renderGallery(); renderDashboard(); }
+
+    function compressImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Unable to read image.'));
+        reader.onload = () => {
+          const image = new Image();
+          image.onerror = () => reject(new Error('Unable to decode image.'));
+          image.onload = () => {
+            const maxDimension = 800;
+            const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+            canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+            canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.78));
+          };
+          image.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    function updatePlayerPhotoPreview(dataUrl) {
+      const preview = document.getElementById('playerPhotoPreview');
+      const image = preview.querySelector('img');
+      const status = document.getElementById('playerPhotoStatus');
+      if (!dataUrl) { preview.classList.add('hidden'); image.removeAttribute('src'); status.textContent = 'Optional. Images are resized before browser-only storage.'; return; }
+      image.src = dataUrl;
+      preview.classList.remove('hidden');
+      status.textContent = 'Photo ready. Save the player to keep this preview.';
+    }
+    function updateNewsCoverPreview(dataUrl) {
+      const preview = document.getElementById('newsCoverPreview');
+      const image = preview.querySelector('img');
+      const status = document.getElementById('newsCoverStatus');
+      if (!dataUrl) { preview.classList.add('hidden'); image.removeAttribute('src'); status.textContent = 'Optional. Images are resized before browser-only storage.'; return; }
+      image.src = dataUrl;
+      preview.classList.remove('hidden');
+      status.textContent = 'Cover ready. Publish the news item to keep it.';
+    }
+    document.getElementById('playerPhotoInput').addEventListener('change', async (event) => {
+      const [file] = event.target.files;
+      if (!file) return;
+      if (!file.type.startsWith('image/')) { event.target.value = ''; showNotice('Please choose an image file.', true); return; }
+      try {
+        playerPhotoData = await compressImage(file);
+        updatePlayerPhotoPreview(playerPhotoData);
+      } catch (error) {
+        playerPhotoData = '';
+        updatePlayerPhotoPreview('');
+        showNotice('That image could not be processed.', true);
+      }
+    });
+    document.getElementById('newsCoverInput').addEventListener('change', async (event) => {
+      const [file] = event.target.files;
+      if (!file) return;
+      if (!file.type.startsWith('image/')) { event.target.value = ''; showNotice('Please choose an image file.', true); return; }
+      try { newsCoverData = await compressImage(file); updateNewsCoverPreview(newsCoverData); }
+      catch (error) { newsCoverData = ''; updateNewsCoverPreview(''); showNotice('That cover image could not be processed.', true); }
+    });
+
+    document.querySelectorAll('.admin-form').forEach((form) => {
+      loadDraft(form);
+      form.addEventListener('input', () => saveDraft(form));
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!form.reportValidity()) { showNotice('Please complete the required fields.', true); return; }
+        const formId = form.getAttribute('id');
+        const type = formId === 'playerForm' ? 'players' : formId === 'newsForm' ? 'news' : 'matches';
+        const values = formValues(form);
+        if (type === 'matches') {
+          values.homeLogo = getTeamLogo(values.homeTeam);
+          values.awayLogo = getTeamLogo(values.awayTeam);
+        }
+        if (type === 'players') values.photo = playerPhotoData;
+        if (type === 'news') values.coverImage = newsCoverData;
+        upsert(type, values); localStorage.removeItem(draftKey);
+        clearForm(form); if (type === 'players') { playerPhotoData = ''; updatePlayerPhotoPreview(''); } if (type === 'news') { newsCoverData = ''; updateNewsCoverPreview(''); } renderAll(); showNotice(`${type === 'players' ? 'Player' : type === 'news' ? 'News item' : 'Match'} saved in this browser.`);
+      });
+      form.querySelector('[data-clear]')?.addEventListener('click', () => { clearForm(form); showNotice('Form cleared.'); });
+    });
+
+    document.querySelectorAll('.admin-nav-link').forEach((link) => link.addEventListener('click', () => {
+      const target = link.dataset.section;
+      document.querySelectorAll('.admin-section').forEach((section) => section.classList.toggle('hidden', section.id !== target));
+      document.querySelectorAll('.admin-nav-link').forEach((item) => { item.classList.remove('bg-[#2161c7]', 'text-white', 'shadow-lg'); item.classList.add('text-white/65'); });
+      link.classList.add('bg-[#2161c7]', 'text-white', 'shadow-lg'); link.classList.remove('text-white/65'); setSidebar(false);
+    }));
+    document.addEventListener('click', (event) => {
+      const edit = event.target.closest('.edit-item'); const remove = event.target.closest('.delete-item');
+      if (edit) editItem(edit.dataset.type, edit.dataset.id);
+      if (remove && window.confirm('Delete this saved item from this browser?')) removeItem(remove.dataset.type, remove.dataset.id);
+    });
+
+    const dropZone = document.getElementById('dropZone');
+    const galleryInput = document.getElementById('galleryInput');
+    document.getElementById('browseGallery').addEventListener('click', () => galleryInput.click());
+    async function saveImages(files) {
+      const images = Array.from(files).filter((file) => file.type.startsWith('image/'));
+      if (!images.length) { showNotice('Please choose image files only.', true); return; }
+      try {
+        const sources = await Promise.all(images.map((file) => compressImage(file)));
+        sources.forEach((src, index) => state.gallery.unshift({ id: uid(), name: images[index].name, src, savedAt: new Date().toISOString() }));
+        write('gallery');
+        renderAll();
+        showNotice(`${images.length} image${images.length === 1 ? '' : 's'} saved in this browser.`);
+      } catch (error) {
+        showNotice('One or more gallery images could not be processed.', true);
+      }
+    }
+    galleryInput.addEventListener('change', (event) => saveImages(event.target.files));
+    ['dragenter', 'dragover'].forEach((eventName) => dropZone.addEventListener(eventName, (event) => { event.preventDefault(); dropZone.classList.add('border-[#2161c7]', 'bg-[#f7faff]'); }));
+    ['dragleave', 'drop'].forEach((eventName) => dropZone.addEventListener(eventName, (event) => { event.preventDefault(); dropZone.classList.remove('border-[#2161c7]', 'bg-[#f7faff]'); }));
+    dropZone.addEventListener('drop', (event) => saveImages(event.dataTransfer.files));
+    document.getElementById('clearDrafts').addEventListener('click', () => { Object.values(collections).forEach((key) => localStorage.removeItem(key)); localStorage.removeItem(draftKey); Object.keys(state).forEach((type) => { state[type] = []; }); renderAll(); showNotice('All local content and drafts cleared.'); });
+    renderAll();
+  </script>
+</body>
+</html>

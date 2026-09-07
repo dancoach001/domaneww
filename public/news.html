@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Doma United FC official-style football website template">
   <title>News | Doma United FC</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tailwind.css">
 </head>
 <body>
 
@@ -35,7 +38,7 @@
   </section>
 
   <section class="section">
-    <div class="news-grid">
+    <div id="newsGrid" class="news-grid">
 
       <article class="news-card">
         <div class="news-image">
@@ -96,6 +99,43 @@
   <p class="copyright">© <span id="year"></span> Doma United FC. All rights reserved.</p>
 </footer>
 
+<script>
+  (function renderSavedNews() {
+    const grid = document.getElementById('newsGrid');
+    let posts = [];
+    try { posts = JSON.parse(localStorage.getItem('domaNews') || '[]'); } catch (error) { posts = []; }
+    if (!grid || !Array.isArray(posts) || !posts.length) return;
+    grid.replaceChildren();
+    const escapeText = (value) => String(value || '');
+    const cards = posts.map((post) => {
+      const card = document.createElement('article');
+      card.className = 'news-card';
+      const imageWrap = document.createElement('div');
+      imageWrap.className = 'news-image';
+      if (post.coverImage) {
+        const image = document.createElement('img');
+        image.src = post.coverImage;
+        image.alt = escapeText(post.headline);
+        imageWrap.appendChild(image);
+      } else imageWrap.textContent = 'NEWS';
+      const content = document.createElement('div');
+      content.className = 'news-content';
+      const category = document.createElement('span');
+      category.textContent = escapeText(post.category || 'Club');
+      const headline = document.createElement('h3');
+      headline.textContent = escapeText(post.headline || 'Club update');
+      const summary = document.createElement('p');
+      summary.textContent = escapeText(post.summary || post.content || '');
+      const date = document.createElement('small');
+      date.className = 'mt-3 block text-[11px] font-semibold text-[#7d96b8]';
+      date.textContent = post.savedAt ? new Date(post.savedAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently published';
+      content.append(category, headline, summary, date);
+      card.append(imageWrap, content);
+      return card;
+    });
+    grid.prepend(...cards);
+  }());
+</script>
 <script src="matches.js" onload="initMobileMenu()"></script>
 </body>
 </html>
