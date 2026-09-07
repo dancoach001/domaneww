@@ -3,84 +3,1017 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Doma United FC official-style football website template">
+
+  <meta
+    name="description"
+    content="Doma United FC official gallery"
+  >
+
   <title>Gallery | Doma United FC</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  >
+
   <link rel="stylesheet" href="tailwind.css">
+
+  <style>
+    /* =========================================================
+       GALLERY
+    ========================================================= */
+
+    .gallery-item {
+      cursor: pointer;
+      transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        border-color .2s ease;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-4px);
+    }
+
+    .gallery-image-wrap {
+      position: relative;
+      overflow: hidden;
+      background: #071b3a;
+    }
+
+    .gallery-image {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      display: block;
+      transition: transform .35s ease;
+    }
+
+    .gallery-item:hover .gallery-image {
+      transform: scale(1.04);
+    }
+
+    .gallery-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(7, 27, 58, 0);
+      transition: background .25s ease;
+    }
+
+    .gallery-item:hover .gallery-overlay {
+      background: rgba(7, 27, 58, .42);
+    }
+
+    .gallery-view-button {
+      transform: translateY(10px);
+      opacity: 0;
+      transition:
+        transform .25s ease,
+        opacity .25s ease;
+    }
+
+    .gallery-item:hover .gallery-view-button {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+
+    /* =========================================================
+       GALLERY MODAL
+    ========================================================= */
+
+    #galleryModal {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+
+      display: none;
+      align-items: center;
+      justify-content: center;
+
+      padding: 16px;
+
+      background: rgba(7, 27, 58, .72);
+      backdrop-filter: blur(5px);
+
+      overflow-y: auto;
+    }
+
+    #galleryModal.show {
+      display: flex;
+    }
+
+    .gallery-modal-box {
+      position: relative;
+
+      width: min(680px, 100%);
+
+      max-height: 90vh;
+
+      overflow: hidden;
+
+      border-radius: 16px;
+
+      background: #ffffff;
+
+      box-shadow:
+        0 25px 70px rgba(0, 0, 0, .28);
+
+      animation: galleryModalIn .2s ease-out;
+    }
+
+    @keyframes galleryModalIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px) scale(.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .gallery-modal-image-wrap {
+      position: relative;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: #071b3a;
+
+      min-height: 180px;
+      max-height: 52vh;
+
+      overflow: hidden;
+    }
+
+    #galleryModalImage {
+      display: block;
+
+      width: 100%;
+      height: auto;
+
+      max-height: 52vh;
+
+      object-fit: contain;
+    }
+
+    .gallery-modal-content {
+      padding: 20px 22px 22px;
+
+      max-height: 32vh;
+
+      overflow-y: auto;
+    }
+
+    .gallery-modal-label {
+      margin: 0;
+
+      font-size: 10px;
+      font-weight: 900;
+
+      letter-spacing: 2px;
+
+      text-transform: uppercase;
+
+      color: #2161c7;
+    }
+
+    #galleryModalTitle {
+      margin: 7px 0 0;
+
+      font-size: 22px;
+      line-height: 1.25;
+
+      font-weight: 900;
+
+      color: #0a2550;
+    }
+
+    #galleryModalBio {
+      margin: 14px 0 0;
+
+      padding-top: 14px;
+
+      border-top: 1px solid #e3edf8;
+
+      font-size: 14px;
+      line-height: 1.7;
+
+      color: #6d83a2;
+
+      white-space: pre-line;
+    }
+
+    .gallery-modal-close {
+      position: absolute;
+
+      top: 12px;
+      right: 12px;
+
+      z-index: 10;
+
+      width: 40px;
+      height: 40px;
+
+      display: grid;
+      place-items: center;
+
+      border: 0;
+      border-radius: 50%;
+
+      background: rgba(0, 0, 0, .62);
+
+      color: #ffffff;
+
+      font-size: 25px;
+      line-height: 1;
+
+      cursor: pointer;
+
+      transition:
+        background .2s ease,
+        transform .2s ease;
+    }
+
+    .gallery-modal-close:hover {
+      background: rgba(0, 0, 0, .82);
+      transform: scale(1.05);
+    }
+
+
+    /* =========================================================
+       MOBILE
+    ========================================================= */
+
+    @media (max-width: 640px) {
+
+      #galleryModal {
+        padding: 12px;
+      }
+
+      .gallery-modal-box {
+        width: 100%;
+        max-height: 88vh;
+        border-radius: 14px;
+      }
+
+      .gallery-image {
+        height: 230px;
+      }
+
+      .gallery-modal-image-wrap {
+        max-height: 43vh;
+      }
+
+      #galleryModalImage {
+        max-height: 43vh;
+      }
+
+      .gallery-modal-content {
+        padding: 17px 18px 19px;
+        max-height: 38vh;
+      }
+
+      #galleryModalTitle {
+        font-size: 19px;
+      }
+
+      #galleryModalBio {
+        font-size: 13px;
+        line-height: 1.65;
+      }
+
+      .gallery-modal-close {
+        width: 36px;
+        height: 36px;
+
+        top: 9px;
+        right: 9px;
+
+        font-size: 22px;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
+<!-- =========================================================
+     NAVIGATION
+========================================================= -->
+
 <nav class="navbar">
+
   <a class="brand" href="index.html">
-    <img src="images/logo.png" alt="Doma United FC logo">
+
+    <img
+      src="images/logo.png"
+      alt="Doma United FC logo"
+    >
+
     <span>Doma United FC</span>
+
   </a>
-  <a class="admin-link" href="admin-login.html" aria-label="Admin Login" title="Admin Login"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg></a>
-  <button class="menu-toggle" aria-label="Open menu">☰</button>
+
+
+  <a
+    class="admin-link"
+    href="admin-login.html"
+    aria-label="Admin Login"
+    title="Admin Login"
+  >
+
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    >
+
+      <path d="M20 21a8 8 0 0 0-16 0"></path>
+
+      <circle
+        cx="12"
+        cy="7"
+        r="4"
+      ></circle>
+
+    </svg>
+
+  </a>
+
+
+  <button
+    class="menu-toggle"
+    aria-label="Open menu"
+  >
+    ☰
+  </button>
+
+
   <div class="nav-links">
-    <a href="index.html">Home</a>
-    <a href="matches.html">Matches</a>
-    <a href="squad.html">Squad</a>
-    <a href="standings.html">Standings</a>
-    <a href="news.html">News</a>
-    <a href="gallery.html">Gallery</a>
-    <a href="about.html">About</a>
+
+    <a href="index.html">
+      Home
+    </a>
+
+    <a href="matches.html">
+      Matches
+    </a>
+
+    <a href="squad.html">
+      Squad
+    </a>
+
+    <a href="standings.html">
+      Standings
+    </a>
+
+    <a href="news.html">
+      News
+    </a>
+
+    <a href="gallery.html">
+      Gallery
+    </a>
+
+    <a href="about.html">
+      About
+    </a>
+
   </div>
+
 </nav>
 
 
+<!-- =========================================================
+     MAIN
+========================================================= -->
+
 <main>
-  <section class="page-header"><p>MEMORIES</p><h1>Gallery</h1><span>Add matchday and club photos here.</span></section>
-  <section class="section"><div id="galleryGrid" class="gallery-grid">
-    <div class="gallery-item">PHOTO 01</div><div class="gallery-item">PHOTO 02</div><div class="gallery-item">PHOTO 03</div>
-    <div class="gallery-item">PHOTO 04</div><div class="gallery-item">PHOTO 05</div><div class="gallery-item">PHOTO 06</div>
-  </div></section>
+
+  <section class="page-header">
+
+    <p>
+      MEMORIES
+    </p>
+
+    <h1>
+      PLAYERS
+    </h1>
+
+    <span>
+      PLAYERS FOR DOMA UNITED FC.
+    </span>
+
+  </section>
+
+
+  <section class="section">
+
+    <div
+      id="galleryGrid"
+      class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+    >
+    </div>
+
+  </section>
+
 </main>
 
 
+<!-- =========================================================
+     GALLERY POPUP
+========================================================= -->
+
+<div
+  id="galleryModal"
+  aria-hidden="true"
+>
+
+  <div
+    class="gallery-modal-box"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="galleryModalTitle"
+  >
+
+    <!-- CLOSE -->
+
+    <button
+      id="galleryModalClose"
+      class="gallery-modal-close"
+      type="button"
+      aria-label="Close gallery popup"
+    >
+      ×
+    </button>
+
+
+    <!-- IMAGE -->
+
+    <div class="gallery-modal-image-wrap">
+
+      <img
+        id="galleryModalImage"
+        src=""
+        alt=""
+      >
+
+    </div>
+
+
+    <!-- DETAILS -->
+
+    <div class="gallery-modal-content">
+
+      <p class="gallery-modal-label">
+        Gallery
+      </p>
+
+      <h2 id="galleryModalTitle">
+        Gallery image
+      </h2>
+
+      <p id="galleryModalBio">
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================================================
+     FOOTER
+========================================================= -->
+
 <footer class="footer">
+
   <div>
-    <img src="images/logo.png" alt="Doma United FC logo">
-    <h3>Doma United FC</h3>
-    <p>The Savannah Tigers.</p>
+
+    <img
+      src="images/logo.png"
+      alt="Doma United FC logo"
+    >
+
+    <h3>
+      Doma United FC
+    </h3>
+
+    <p>
+      The Savannah Tigers.
+    </p>
+
   </div>
+
+
   <div>
-    <h4>Quick Links</h4>
-    <a href="matches.html">Matches</a>
-    <a href="squad.html">Squad</a>
-    <a href="news.html">News</a>
-    <a href="gallery.html">Gallery</a>
+
+    <h4>
+      Quick Links
+    </h4>
+
+    <a href="matches.html">
+      Matches
+    </a>
+
+    <a href="squad.html">
+      Squad
+    </a>
+
+    <a href="news.html">
+      News
+    </a>
+
+    <a href="gallery.html">
+      Gallery
+    </a>
+
   </div>
+
+
   <div>
-    <h4>Club</h4>
-    <a href="about.html">About the Club</a>
-    <a href="#">Contact</a>
+
+    <h4>
+      Club
+    </h4>
+
+    <a href="about.html">
+      About the Club
+    </a>
+
+    <a href="#">
+      Contact
+    </a>
+
   </div>
-  <p class="copyright">© <span id="year"></span> Doma United FC. All rights reserved.</p>
+
+
+  <p class="copyright">
+
+    ©
+    <span id="year"></span>
+    Doma United FC. All rights reserved.
+
+  </p>
+
 </footer>
 
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
 <script>
-  (function renderSavedGallery() {
-    const grid = document.getElementById('galleryGrid');
-    let images = [];
-    try { images = JSON.parse(localStorage.getItem('domaGallery') || '[]'); } catch (error) { images = []; }
-    if (!grid || !Array.isArray(images) || !images.length) return;
-    const cards = images.map((item) => {
-      const card = document.createElement('div');
-      card.className = 'gallery-item overflow-hidden';
-      const image = document.createElement('img');
-      image.src = item.src || '';
-      image.alt = item.name || 'Doma United FC gallery image';
-      image.className = 'h-full w-full object-cover';
-      image.addEventListener('error', () => { card.replaceChildren(); card.textContent = 'PHOTO'; });
-      card.appendChild(image);
-      return card;
-    });
-    grid.prepend(...cards);
+
+  /* =========================================================
+     LOAD GALLERY FROM ADMIN
+  ========================================================= */
+
+  (function renderGallery() {
+
+    const galleryGrid =
+      document.getElementById('galleryGrid');
+
+    if (!galleryGrid) return;
+
+
+    let gallery = [];
+
+    try {
+
+      gallery =
+        JSON.parse(
+          localStorage.getItem('domaGallery') || '[]'
+        );
+
+    } catch (error) {
+
+      gallery = [];
+
+    }
+
+
+    if (
+      !Array.isArray(gallery) ||
+      !gallery.length
+    ) {
+
+      const emptyState =
+        document.createElement('div');
+
+      emptyState.className =
+        'col-span-full rounded-xl border border-dashed border-[#cbdcf0] bg-white px-5 py-16 text-center';
+
+
+      const title =
+        document.createElement('h2');
+
+      title.className =
+        'text-lg font-black text-[#0a2550]';
+
+      title.textContent =
+        'No gallery images yet.';
+
+
+      const message =
+        document.createElement('p');
+
+      message.className =
+        'mt-2 text-sm text-[#7d96b8]';
+
+      message.textContent =
+        'Gallery images uploaded from the admin dashboard will appear here.';
+
+
+      emptyState.append(
+        title,
+        message
+      );
+
+      galleryGrid.appendChild(
+        emptyState
+      );
+
+      return;
+
+    }
+
+
+    galleryGrid.replaceChildren(
+      ...gallery.map(
+        createGalleryCard
+      )
+    );
+
   }());
+
+
+  /* =========================================================
+     CREATE GALLERY CARD
+  ========================================================= */
+
+  function createGalleryCard(item) {
+
+    const card =
+      document.createElement('article');
+
+    card.className =
+      'gallery-item overflow-hidden rounded-xl border border-[#dbe7f7] bg-white shadow-[0_12px_32px_rgba(24,70,130,.07)]';
+
+
+    card.setAttribute(
+      'tabindex',
+      '0'
+    );
+
+    card.setAttribute(
+      'role',
+      'button'
+    );
+
+    card.setAttribute(
+      'aria-label',
+      `View ${item.name || 'gallery image'}`
+    );
+
+
+    /* IMAGE */
+
+    const imageWrap =
+      document.createElement('div');
+
+    imageWrap.className =
+      'gallery-image-wrap';
+
+
+    const image =
+      document.createElement('img');
+
+    image.className =
+      'gallery-image';
+
+    image.src =
+      item.src || '';
+
+    image.alt =
+      item.name
+        ? `${item.name} - Doma United FC`
+        : 'Doma United FC gallery image';
+
+
+    image.addEventListener(
+      'error',
+      () => {
+
+        imageWrap.innerHTML = '';
+
+        const fallback =
+          document.createElement('div');
+
+        fallback.className =
+          'grid h-[260px] place-items-center text-sm font-black uppercase tracking-[2px] text-white';
+
+        fallback.textContent =
+          'Image unavailable';
+
+        imageWrap.appendChild(
+          fallback
+        );
+
+      }
+    );
+
+
+    /* HOVER OVERLAY */
+
+    const overlay =
+      document.createElement('div');
+
+    overlay.className =
+      'gallery-overlay';
+
+
+    const viewButton =
+      document.createElement('span');
+
+    viewButton.className =
+      'gallery-view-button rounded-full bg-white/95 px-4 py-2 text-[10px] font-black uppercase tracking-[1px] text-[#0a2550] shadow-lg';
+
+    viewButton.textContent =
+      'View details';
+
+
+    overlay.appendChild(
+      viewButton
+    );
+
+
+    imageWrap.append(
+      image,
+      overlay
+    );
+
+
+    /* DETAILS UNDER IMAGE */
+
+    const details =
+      document.createElement('div');
+
+    details.className =
+      'p-4';
+
+
+    const title =
+      document.createElement('h2');
+
+    title.className =
+      'truncate text-base font-black text-[#10284b]';
+
+    title.textContent =
+      item.name || 'Gallery image';
+
+
+    const hint =
+      document.createElement('p');
+
+    hint.className =
+      'mt-1 text-[10px] font-bold uppercase tracking-[.7px] text-[#9aacc4]';
+
+    hint.textContent =
+      'Tap image to view description';
+
+
+    details.append(
+      title,
+      hint
+    );
+
+
+    card.append(
+      imageWrap,
+      details
+    );
+
+
+    /* CLICK */
+
+    card.addEventListener(
+      'click',
+      () => {
+
+        openGalleryModal(item);
+
+      }
+    );
+
+
+    /* KEYBOARD */
+
+    card.addEventListener(
+      'keydown',
+      event => {
+
+        if (
+          event.key === 'Enter' ||
+          event.key === ' '
+        ) {
+
+          event.preventDefault();
+
+          openGalleryModal(item);
+
+        }
+
+      }
+    );
+
+
+    return card;
+
+  }
+
+
+  /* =========================================================
+     MODAL ELEMENTS
+  ========================================================= */
+
+  const galleryModal =
+    document.getElementById(
+      'galleryModal'
+    );
+
+  const galleryModalImage =
+    document.getElementById(
+      'galleryModalImage'
+    );
+
+  const galleryModalTitle =
+    document.getElementById(
+      'galleryModalTitle'
+    );
+
+  const galleryModalBio =
+    document.getElementById(
+      'galleryModalBio'
+    );
+
+  const galleryModalClose =
+    document.getElementById(
+      'galleryModalClose'
+    );
+
+
+  /* =========================================================
+     OPEN MODAL
+  ========================================================= */
+
+  function openGalleryModal(item) {
+
+    if (!item) return;
+
+
+    galleryModalImage.src =
+      item.src || '';
+
+    galleryModalImage.alt =
+      item.name || 'Gallery image';
+
+
+    galleryModalTitle.textContent =
+      item.name || 'Gallery image';
+
+
+    galleryModalBio.textContent =
+      item.bio ||
+      'No description has been added for this gallery image.';
+
+
+    galleryModal.classList.add(
+      'show'
+    );
+
+    galleryModal.setAttribute(
+      'aria-hidden',
+      'false'
+    );
+
+
+    document.body.classList.add(
+      'overflow-hidden'
+    );
+
+
+    galleryModalClose.focus();
+
+  }
+
+
+  /* =========================================================
+     CLOSE MODAL
+  ========================================================= */
+
+  function closeGalleryModal() {
+
+    galleryModal.classList.remove(
+      'show'
+    );
+
+    galleryModal.setAttribute(
+      'aria-hidden',
+      'true'
+    );
+
+
+    document.body.classList.remove(
+      'overflow-hidden'
+    );
+
+
+    galleryModalImage.src =
+      '';
+
+  }
+
+
+  /* CLOSE BUTTON */
+
+  galleryModalClose.addEventListener(
+    'click',
+    closeGalleryModal
+  );
+
+
+  /* CLICK OUTSIDE */
+
+  galleryModal.addEventListener(
+    'click',
+    event => {
+
+      if (
+        event.target === galleryModal
+      ) {
+
+        closeGalleryModal();
+
+      }
+
+    }
+  );
+
+
+  /* ESCAPE */
+
+  document.addEventListener(
+    'keydown',
+    event => {
+
+      if (
+        event.key === 'Escape' &&
+        galleryModal.classList.contains('show')
+      ) {
+
+        closeGalleryModal();
+
+      }
+
+    }
+  );
+
+
+  /* =========================================================
+     FOOTER YEAR
+  ========================================================= */
+
+  const year =
+    document.getElementById('year');
+
+  if (year) {
+
+    year.textContent =
+      new Date().getFullYear();
+
+  }
+
 </script>
-<script src="matches.js" onload="initMobileMenu()"></script>
+
+
+<script
+  src="matches.js"
+  onload="initMobileMenu()"
+></script>
+
 </body>
 </html>

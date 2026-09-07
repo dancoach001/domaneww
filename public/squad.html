@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Doma United FC official-style football website template">
-  <title>Squad | Doma United FC</title>
+  <title>Gallery | Doma United FC</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -32,33 +32,11 @@
 
 
 <main>
-  <section class="page-header"><p>THE TEAM</p><h1>Squad</h1><span>Add the official Doma United FC squad here.</span></section>
+  <section class="page-header"><p>MEMORIES</p><h1>MATCHDAY SQUAD</h1><span>Add matchday and club squad here.</span></section>
   <section class="section">
-    <div id="startingXiSection">
-      <div id="squadGrid" class="player-grid">
-      <article class="player-card"><div class="player-photo">PLAYER</div><div><span>GK</span><h3>Player Name</h3><p>#01</p></div></article>
-      <article class="player-card"><div class="player-photo">PLAYER</div><div><span>DEF</span><h3>Player Name</h3><p>#02</p></div></article>
-      <article class="player-card"><div class="player-photo">PLAYER</div><div><span>MID</span><h3>Player Name</h3><p>#08</p></div></article>
-      <article class="player-card"><div class="player-photo">PLAYER</div><div><span>FWD</span><h3>Player Name</h3><p>#09</p></div></article>
-      </div>
-    </div>
-    <section id="substitutesSection" class="mt-12 hidden">
-      <h2 class="mb-4 text-xs font-black uppercase tracking-[2px] text-[#6d83a2]">SUBSTITUTES</h2>
-      <div id="substitutesGrid" class="player-grid"></div>
-    </section>
+    <div id="playerDirectory" class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3"></div>
   </section>
 </main>
-
-<div id="playerModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-[#071b3a]/75 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="playerModalName">
-  <div id="playerModalPanel" class="relative max-h-[90vh] w-full max-w-2xl overflow-auto rounded-2xl bg-white shadow-2xl">
-    <button id="playerModalClose" type="button" class="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full bg-[#071b3a]/80 text-xl text-white" aria-label="Close player profile">×</button>
-    <div class="grid md:grid-cols-[220px_1fr]">
-      <div id="playerModalPhoto" class="grid min-h-[240px] place-items-center overflow-hidden bg-gradient-to-br from-[#0a2550] to-[#4e8cf0] text-2xl font-black text-white"><span>PLAYER</span></div>
-      <div class="p-7 sm:p-9"><p id="playerModalStatus" class="text-[11px] font-black uppercase tracking-[1.5px] text-[#2161c7]"></p><h2 id="playerModalName" class="mt-2 text-3xl font-black text-[#0a2550]"></h2><p id="playerModalMeta" class="mt-2 text-sm font-bold text-[#6d83a2]"></p><div class="mt-7 border-t border-[#e3edf8] pt-5"><p class="text-[10px] font-black uppercase tracking-[1.5px] text-[#7d96b8]">Player bio</p><p id="playerModalBio" class="mt-2 whitespace-pre-line text-sm leading-7 text-[#526b8e]"></p></div></div>
-    </div>
-  </div>
-</div>
-
 
 <footer class="footer">
   <div>
@@ -82,28 +60,18 @@
 </footer>
 
 <script>
-  (function renderSavedSquad() {
-    const grid = document.getElementById('squadGrid');
-    const substitutesGrid = document.getElementById('substitutesGrid');
-    const substitutesSection = document.getElementById('substitutesSection');
-    const modal = document.getElementById('playerModal');
-    const modalPanel = document.getElementById('playerModalPanel');
-    const modalPhoto = document.getElementById('playerModalPhoto');
-    const modalName = document.getElementById('playerModalName');
-    const modalMeta = document.getElementById('playerModalMeta');
-    const modalStatus = document.getElementById('playerModalStatus');
-    const modalBio = document.getElementById('playerModalBio');
+  (function renderPlayerDirectory() {
+    const directory = document.getElementById('playerDirectory');
+    if (!directory) return;
     let players = [];
-
-    try {
-      const savedPlayers = JSON.parse(localStorage.getItem('domaPlayers') || '[]');
-      players = Array.isArray(savedPlayers) ? savedPlayers : [];
-    } catch (error) {
-      players = [];
+    try { players = JSON.parse(localStorage.getItem('domaPlayers') || '[]'); } catch (error) { players = []; }
+    if (!Array.isArray(players) || !players.length) {
+      const emptyState = document.createElement('p');
+      emptyState.className = 'col-span-full rounded-xl border border-dashed border-[#cbdcf0] bg-white px-5 py-16 text-center text-sm text-[#7d96b8]';
+      emptyState.textContent = 'No player profiles have been added yet.';
+      directory.appendChild(emptyState);
+      return;
     }
-
-    if (!grid || !substitutesGrid || !players.length) return;
-
     const positionLabels = {
       Goalkeeper: 'GK',
       Defender: 'DEF',
@@ -118,70 +86,40 @@
       return element;
     };
 
-    const openModal = (player) => {
-      modalStatus.textContent = player.status === 'Substitute' ? 'Substitute' : 'Starting XI';
-      modalName.textContent = player.playerName || 'Player Name';
-      modalMeta.textContent = `#${player.number || '--'} · ${positionLabels[player.position] || player.position || 'PLAYER'}`;
-      modalBio.textContent = player.bio || 'No bio has been added for this player yet.';
-      modalPhoto.replaceChildren();
-      if (player.photo) {
-        const image = document.createElement('img');
-        image.src = player.photo;
-        image.alt = `${player.playerName || 'Player'} photo`;
-        image.className = 'h-full min-h-[240px] w-full object-cover';
-        image.addEventListener('error', () => { modalPhoto.textContent = 'PLAYER'; });
-        modalPhoto.appendChild(image);
-      } else modalPhoto.textContent = 'PLAYER';
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    };
-    const closeModal = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); };
-    document.getElementById('playerModalClose').addEventListener('click', closeModal);
-    modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
-    modalPanel.addEventListener('click', (event) => event.stopPropagation());
-    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); });
-
     const createCard = (player) => {
       const card = document.createElement('article');
-      card.className = 'player-card cursor-pointer transition hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-[#e8f2ff]';
-      card.tabIndex = 0;
-      card.setAttribute('role', 'button');
-      card.setAttribute('aria-label', `Open profile for ${player.playerName || 'player'}`);
-      card.addEventListener('click', () => openModal(player));
-      card.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openModal(player); } });
+      card.className = 'overflow-hidden rounded-xl border border-[#dbe7f7] bg-white shadow-[0_12px_32px_rgba(24,70,130,.07)] transition duration-200 hover:-translate-y-1 hover:border-[#aac8f3] hover:shadow-[0_20px_42px_rgba(24,70,130,.15)]';
 
       const photo = document.createElement('div');
-      photo.className = 'player-photo overflow-hidden';
+      photo.className = 'grid h-[320px] place-items-center overflow-hidden bg-gradient-to-br from-[#0a2550] via-[#1850a4] to-[#4e8cf0] text-2xl font-black tracking-[2px] text-white';
       if (player.photo) {
         const image = document.createElement('img');
         image.src = player.photo;
         image.alt = player.playerName ? `${player.playerName} photo` : 'Player photo';
         image.className = 'h-full w-full object-cover';
-        image.addEventListener('error', () => {
-          photo.replaceChildren();
-          photo.textContent = 'PLAYER';
-        });
+        image.addEventListener('error', () => { photo.replaceChildren(); photo.textContent = 'PLAYER'; });
         photo.appendChild(image);
       } else {
         photo.textContent = 'PLAYER';
       }
 
       const details = document.createElement('div');
+      details.className = 'p-6';
+      const header = document.createElement('div');
+      header.className = 'flex items-start justify-between gap-4';
+      header.append(
+        createText('div', 'text-[11px] font-extrabold uppercase tracking-[1.5px] text-[#2161c7]', positionLabels[player.position] || player.position || 'PLAYER'),
+        createText('span', 'shrink-0 rounded-full bg-[#e6f0ff] px-3 py-1 text-[10px] font-black uppercase tracking-[.5px] text-[#2161c7]', player.status || 'Active')
+      );
       details.append(
-        createText('span', '', positionLabels[player.position] || player.position || 'PLAYER'),
-        createText('h3', '', player.playerName || 'Player Name'),
-        createText('p', '', `#${player.number || '--'}`)
+        header,
+        createText('h2', 'mt-3 text-2xl font-black text-[#10284b]', player.playerName || 'Player Name'),
+        createText('p', 'mt-2 text-sm font-bold text-[#6d83a2]', `Squad number #${player.number || '--'} · ${player.position || 'Position not set'}`)
       );
       card.append(photo, details);
       return card;
     };
-    const starting = players.filter((player) => (player.status || 'Starting XI') !== 'Substitute');
-    const substitutes = players.filter((player) => player.status === 'Substitute');
-    grid.replaceChildren(...starting.map(createCard));
-    if (substitutes.length) {
-      substitutesSection.classList.remove('hidden');
-      substitutesGrid.replaceChildren(...substitutes.map(createCard));
-    }
+    directory.replaceChildren(...players.map(createCard));
   }());
 </script>
 <script src="matches.js" onload="initMobileMenu()"></script>
