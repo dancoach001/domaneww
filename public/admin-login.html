@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Doma United FC admin login">
+  <title>Admin Login | Doma United FC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tailwind.css">
+</head>
+<body class="min-h-screen bg-[#f4f7fb] text-[#10284b]">
+  <main class="relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-10 sm:px-8">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(78,140,240,.18),transparent_32%),linear-gradient(135deg,#f4f7fb_0%,#e8f2ff_100%)]"></div>
+    <div class="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-2xl border border-[#dbe7f7] bg-white shadow-[0_24px_70px_rgba(7,27,58,.14)] lg:grid-cols-[.9fr_1.1fr]">
+      <section class="relative hidden overflow-hidden bg-[#071b3a] p-10 text-white lg:flex lg:flex-col lg:justify-between">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(78,140,240,.72),transparent_30%),linear-gradient(145deg,#071b3a_0%,#123f86_70%,#2161c7_100%)]"></div>
+        <div class="relative"><img src="images/logo.png" alt="Doma United FC logo" class="admin-login-logo h-16 w-16 object-contain"><p class="mt-10 text-xs font-black uppercase tracking-[2.5px] text-[#a9c9ff]">Savannah Tigers</p><h1 class="mt-3 text-5xl font-black uppercase leading-[.95] tracking-[-2px]">Club<br>control<br>room.</h1></div>
+        <p class="relative max-w-xs text-sm leading-6 text-[#d6e5ff]">Manage fixtures, news, gallery media, and squad profiles from one browser-only workspace.</p>
+      </section>
+      <section class="p-7 sm:p-12 lg:p-14">
+        <div class="flex items-center gap-3 lg:hidden"><img src="images/logo.png" alt="Doma United FC logo" class="admin-login-logo h-11 w-11 object-contain"><div><p class="text-sm font-black uppercase tracking-[1px] text-[#0a2550]">Doma United</p><p class="text-[10px] font-bold uppercase tracking-[2px] text-[#2161c7]">Club admin</p></div></div>
+        <div class="mt-10 lg:mt-0"><p class="text-xs font-black uppercase tracking-[2px] text-[#2161c7]">Secure workspace</p><h2 class="mt-3 text-3xl font-black tracking-[-1px] text-[#0a2550]">Welcome back.</h2><p class="mt-2 text-sm text-[#6d83a2]">Sign in to manage Doma United FC content.</p></div>
+        <form id="loginForm" class="mt-8 space-y-5" novalidate>
+          <div><label for="identity" class="block text-xs font-extrabold text-[#17345e]">Username or email</label><input id="identity" name="identity" autocomplete="username" required class="mt-2 block w-full rounded-lg border border-[#cbdcf0] bg-[#fbfdff] px-4 py-3 text-sm outline-none transition focus:border-[#4e8cf0] focus:ring-4 focus:ring-[#e8f2ff]" placeholder="Enter username or email"><p id="identityError" class="mt-2 hidden text-xs font-bold text-[#a53b3b]"></p></div>
+          <div><label for="password" class="block text-xs font-extrabold text-[#17345e]">Password</label><div class="relative mt-2"><input id="password" name="password" type="password" autocomplete="current-password" required class="block w-full rounded-lg border border-[#cbdcf0] bg-[#fbfdff] px-4 py-3 pr-16 text-sm outline-none transition focus:border-[#4e8cf0] focus:ring-4 focus:ring-[#e8f2ff]" placeholder="Enter your password"><button id="togglePassword" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-[11px] font-black uppercase text-[#2161c7]" aria-label="Show password">Show</button></div><p id="passwordError" class="mt-2 hidden text-xs font-bold text-[#a53b3b]"></p></div>
+          <div id="loginMessage" class="hidden rounded-lg border px-4 py-3 text-sm font-bold" role="alert"></div>
+          <button id="loginButton" type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2161c7] px-5 py-3.5 text-xs font-black uppercase tracking-[.8px] text-white shadow-lg shadow-[#2161c7]/20 transition hover:bg-[#1850a4] disabled:cursor-wait disabled:opacity-70"><span id="loginButtonLabel">Sign in</span><span id="loginSpinner" class="hidden h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span></button>
+        </form>
+        <p class="mt-6 text-center text-[11px] text-[#8ba0bd]">Return to the <a href="index.html" class="font-bold text-[#2161c7] hover:underline">public website</a></p>
+      </section>
+    </div>
+  </main>
+  <script>
+    // FRONTEND-ONLY DEMO GATE: replace with backend authentication before public use.
+    const ADMIN_USERNAME = 'suleimansaiduumar@gmail.com';
+    const ADMIN_PASSWORD = 'dancoach001';
+    const form = document.getElementById('loginForm');
+    const identity = document.getElementById('identity');
+    const password = document.getElementById('password');
+    const identityError = document.getElementById('identityError');
+    const passwordError = document.getElementById('passwordError');
+    const message = document.getElementById('loginMessage');
+    const button = document.getElementById('loginButton');
+    const label = document.getElementById('loginButtonLabel');
+    const spinner = document.getElementById('loginSpinner');
+    document.getElementById('togglePassword').addEventListener('click', () => { const visible = password.type === 'text'; password.type = visible ? 'password' : 'text'; document.getElementById('togglePassword').textContent = visible ? 'Show' : 'Hide'; document.getElementById('togglePassword').setAttribute('aria-label', visible ? 'Show password' : 'Hide password'); });
+    function fieldError(target, text) { target.textContent = text; target.classList.toggle('hidden', !text); }
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      fieldError(identityError, identity.value.trim() ? '' : 'Enter your username or email.');
+      fieldError(passwordError, password.value ? '' : 'Enter your password.');
+      if (!identity.value.trim() || !password.value) return;
+      button.disabled = true; label.textContent = 'Checking access'; spinner.classList.remove('hidden');
+      window.setTimeout(() => {
+        if (identity.value.trim().toLowerCase() === ADMIN_USERNAME.toLowerCase() && password.value === ADMIN_PASSWORD) {
+          sessionStorage.setItem('adminAuthenticated', 'true');
+          message.className = 'rounded-lg border border-[#b9d5fa] bg-[#e8f2ff] px-4 py-3 text-sm font-bold text-[#1850a4]';
+          message.textContent = 'Login successful. Opening dashboard...';
+          window.setTimeout(() => { window.location.href = 'admin.html'; }, 350);
+        } else {
+          message.className = 'rounded-lg border border-[#f3b4b4] bg-[#fff0f0] px-4 py-3 text-sm font-bold text-[#a53b3b]';
+          message.textContent = 'Unable to sign in with those details.';
+          button.disabled = false; label.textContent = 'Sign in'; spinner.classList.add('hidden');
+        }
+      }, 450);
+    });
+  </script>
+</body>
+</html>

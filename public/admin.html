@@ -9,6 +9,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="tailwind.css">
+  <script>
+    // FRONTEND-ONLY DEMO GATE: replace with backend authentication before public use.
+    if (sessionStorage.getItem('adminAuthenticated') !== 'true') window.location.replace('admin-login.html');
+  </script>
 </head>
 <body class="admin-page min-h-screen bg-[#f4f7fb] text-[#10284b]">
   <div class="min-h-screen lg:flex">
@@ -47,7 +51,7 @@
           <button id="sidebarToggle" class="grid h-10 w-10 place-items-center rounded-lg border border-[#dbe7f7] text-lg text-[#0a2550] lg:hidden" aria-label="Open admin menu">☰</button>
           <div><p class="text-[10px] font-black uppercase tracking-[2px] text-[#2161c7]">Doma United FC</p><h1 class="text-lg font-black text-[#0a2550] sm:text-xl">Content dashboard</h1></div>
         </div>
-        <div class="flex items-center gap-3"><span class="hidden rounded-full bg-[#e6f0ff] px-3 py-1.5 text-[11px] font-bold text-[#2161c7] sm:inline-flex">Draft mode</span><a href="index.html" class="grid h-10 w-10 place-items-center rounded-lg border border-[#dbe7f7] text-[#2161c7] transition hover:bg-[#eef5ff]" title="View website" aria-label="View website">↗</a></div>
+        <div class="flex items-center gap-2"><span class="hidden rounded-full bg-[#e6f0ff] px-3 py-1.5 text-[11px] font-bold text-[#2161c7] sm:inline-flex">Demo mode</span><a href="index.html" class="grid h-10 w-10 place-items-center rounded-lg border border-[#dbe7f7] text-[#2161c7] transition hover:bg-[#eef5ff]" title="View website" aria-label="View website">↗</a><button id="logoutButton" type="button" class="rounded-lg border border-[#cbdcf0] px-3 py-2 text-[10px] font-black uppercase tracking-[.6px] text-[#2161c7] transition hover:bg-[#eef5ff]">Logout</button></div>
       </header>
 
       <main class="mx-auto max-w-[1500px] space-y-8 px-5 py-7 sm:px-8 lg:px-10 lg:py-10">
@@ -82,6 +86,7 @@
   </div>
 
   <script>
+    document.getElementById('logoutButton').addEventListener('click', () => { sessionStorage.removeItem('adminAuthenticated'); window.location.href = 'admin-login.html'; });
     const sidebar = document.getElementById('adminSidebar');
     const overlay = document.getElementById('sidebarOverlay');
     const notice = document.getElementById('notice');
