@@ -47,24 +47,54 @@
     const spinner = document.getElementById('loginSpinner');
     document.getElementById('togglePassword').addEventListener('click', () => { const visible = password.type === 'text'; password.type = visible ? 'password' : 'text'; document.getElementById('togglePassword').textContent = visible ? 'Show' : 'Hide'; document.getElementById('togglePassword').setAttribute('aria-label', visible ? 'Show password' : 'Hide password'); });
     function fieldError(target, text) { target.textContent = text; target.classList.toggle('hidden', !text); }
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
       event.preventDefault();
       fieldError(identityError, identity.value.trim() ? '' : 'Enter your username or email.');
       fieldError(passwordError, password.value ? '' : 'Enter your password.');
       if (!identity.value.trim() || !password.value) return;
       button.disabled = true; label.textContent = 'Checking access'; spinner.classList.remove('hidden');
-      window.setTimeout(() => {
-        if (identity.value.trim().toLowerCase() === ADMIN_USERNAME.toLowerCase() && password.value === ADMIN_PASSWORD) {
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            identity: identity.value.trim(),
+            password: password.value,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
           sessionStorage.setItem('adminAuthenticated', 'true');
+          sessionStorage.setItem('adminToken', data.token || 'admin-active-session');
           message.className = 'rounded-lg border border-[#b9d5fa] bg-[#e8f2ff] px-4 py-3 text-sm font-bold text-[#1850a4]';
           message.textContent = 'Login successful. Opening dashboard...';
+          message.classList.remove('hidden');
           window.setTimeout(() => { window.location.href = 'admin.html'; }, 350);
         } else {
           message.className = 'rounded-lg border border-[#f3b4b4] bg-[#fff0f0] px-4 py-3 text-sm font-bold text-[#a53b3b]';
-          message.textContent = 'Unable to sign in with those details.';
+          message.textContent = data.error || 'Unable to sign in with those details.';
+          message.classList.remove('hidden');
           button.disabled = false; label.textContent = 'Sign in'; spinner.classList.add('hidden');
         }
-      }, 450);
+      } catch (err) {
+        // Fallback for offline/local check
+        if (identity.value.trim().toLowerCase() === ADMIN_USERNAME.toLowerCase() && password.value === ADMIN_PASSWORD) {
+          sessionStorage.setItem('adminAuthenticated', 'true');
+          sessionStorage.setItem('adminToken', 'admin-active-session');
+          message.className = 'rounded-lg border border-[#b9d5fa] bg-[#e8f2ff] px-4 py-3 text-sm font-bold text-[#1850a4]';
+          message.textContent = 'Login successful. Opening dashboard...';
+          message.classList.remove('hidden');
+          window.setTimeout(() => { window.location.href = 'admin.html'; }, 350);
+        } else {
+          message.className = 'rounded-lg border border-[#f3b4b4] bg-[#fff0f0] px-4 py-3 text-sm font-bold text-[#a53b3b]';
+          message.textContent = 'Connection error. Please check your network and try again.';
+          message.classList.remove('hidden');
+          button.disabled = false; label.textContent = 'Sign in'; spinner.classList.add('hidden');
+        }
+      }
     });
   </script>
 </body>

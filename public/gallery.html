@@ -579,44 +579,46 @@
 <script>
 
   /* =========================================================
-     LOAD GALLERY FROM ADMIN
+     LOAD GALLERY FROM ONLINE DATABASE
   ========================================================= */
 
-  (function renderGallery() {
-
+  async function loadOnlineGallery() {
     const galleryGrid =
       document.getElementById('galleryGrid');
 
     if (!galleryGrid) return;
 
-
     let gallery = [];
 
     try {
-
-      gallery =
-        JSON.parse(
-          localStorage.getItem('domaGallery') || '[]'
-        );
-
+      const res = await fetch('/api/gallery');
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        gallery = json.data;
+        try {
+          localStorage.setItem('domaGallery', JSON.stringify(gallery));
+        } catch (e) {}
+      }
     } catch (error) {
-
-      gallery = [];
-
+      try {
+        gallery =
+          JSON.parse(
+            localStorage.getItem('domaGallery') || '[]'
+          );
+      } catch (err) {
+        gallery = [];
+      }
     }
-
 
     if (
       !Array.isArray(gallery) ||
       !gallery.length
     ) {
-
       const emptyState =
         document.createElement('div');
 
       emptyState.className =
         'col-span-full rounded-xl border border-dashed border-[#cbdcf0] bg-white px-5 py-16 text-center';
-
 
       const title =
         document.createElement('h2');
@@ -627,7 +629,6 @@
       title.textContent =
         'No gallery images yet.';
 
-
       const message =
         document.createElement('p');
 
@@ -637,28 +638,40 @@
       message.textContent =
         'Gallery images uploaded from the admin dashboard will appear here.';
 
-
       emptyState.append(
         title,
         message
       );
 
-      galleryGrid.appendChild(
+      galleryGrid.replaceChildren(
         emptyState
       );
 
       return;
-
     }
-
 
     galleryGrid.replaceChildren(
       ...gallery.map(
         createGalleryCard
       )
     );
+  }
 
-  }());
+  loadOnlineGallery();
+
+  // Real-time synchronization across devices and browsers
+  try {
+    const eventSource = new EventSource('/api/events');
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data && data.type === 'gallery') {
+          loadOnlineGallery();
+        }
+      } catch (e) {}
+    };
+  } catch (e) {}
+
 
 
   /* =========================================================

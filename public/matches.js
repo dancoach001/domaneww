@@ -723,6 +723,20 @@ document.addEventListener(
 
         loadMatches();
 
+        // Real-time synchronization across devices and browsers
+        try {
+            const eventSource = new EventSource('/api/events');
+            eventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data && data.type === 'matches') {
+                        loadMatches();
+                    }
+                } catch (e) {}
+            };
+        } catch (e) {}
+
     }
 );
+
 

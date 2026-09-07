@@ -101,11 +101,23 @@
 </footer>
 
 <script>
-  (function renderSavedNews() {
+  async function loadOnlineNews() {
     const grid = document.getElementById('newsGrid');
+    if (!grid) return;
+
     let posts = [];
-    try { posts = JSON.parse(localStorage.getItem('domaNews') || '[]'); } catch (error) { posts = []; }
-    if (!grid || !Array.isArray(posts) || !posts.length) return;
+    try {
+      const res = await fetch('/api/news');
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data) && json.data.length) {
+        posts = json.data;
+        try { localStorage.setItem('domaNews', JSON.stringify(posts)); } catch (e) {}
+      }
+    } catch (err) {
+      try { posts = JSON.parse(localStorage.getItem('domaNews') || '[]'); } catch (e) { posts = []; }
+    }
+
+    if (!Array.isArray(posts) || !posts.length) return;
     grid.replaceChildren();
     const escapeText = (value) => String(value || '');
     const cards = posts.map((post) => {
@@ -135,7 +147,22 @@
       return card;
     });
     grid.prepend(...cards);
-  }());
+  }
+
+  loadOnlineNews();
+
+  // Real-time synchronization across devices and browsers
+  try {
+    const eventSource = new EventSource('/api/events');
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data && data.type === 'news') {
+          loadOnlineNews();
+        }
+      } catch (e) {}
+    };
+  } catch (e) {}
 </script>
 <script src="matches.js" onload="initMobileMenu()"></script>
 </body>

@@ -1028,44 +1028,95 @@
 
 
     /* =========================================================
-       STATE
+       STATE & ONLINE DATABASE API
     ========================================================= */
 
-    function read(type) {
+    function getAdminHeaders() {
+      const token = sessionStorage.getItem('adminToken') || 'admin-active-session';
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+    }
 
+    async function uploadImageFile(file) {
+      if (!file) return '';
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = sessionStorage.getItem('adminToken') || 'admin-active-session';
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Upload failed' }));
+        throw new Error(err.error || 'Image upload failed');
+      }
+      const data = await res.json();
+      return data.url || '';
+    }
+
+    function readCache(type) {
       try {
-
         return JSON.parse(
           localStorage.getItem(collections[type]) || '[]'
         );
-
       } catch (error) {
-
         return [];
-
       }
-
     }
 
-
     const state = {
-      players: read('players'),
-      news: read('news'),
-      matches: read('matches'),
-      gallery: read('gallery')
+      players: readCache('players'),
+      news: readCache('news'),
+      matches: readCache('matches'),
+      gallery: readCache('gallery')
     };
-
 
     let playerPhotoData = '';
     let newsCoverData = '';
     let galleryEditId = '';
 
-
     function write(type) {
-      localStorage.setItem(
-        collections[type],
-        JSON.stringify(state[type])
-      );
+      try {
+        localStorage.setItem(
+          collections[type],
+          JSON.stringify(state[type])
+        );
+      } catch (e) {}
+    }
+
+    async function loadAllData() {
+      try {
+        const [newsRes, galleryRes, playersRes, matchesRes] = await Promise.all([
+          fetch('/api/news').then(r => r.json()).catch(() => null),
+          fetch('/api/gallery').then(r => r.json()).catch(() => null),
+          fetch('/api/players').then(r => r.json()).catch(() => null),
+          fetch('/api/admin-matches').then(r => r.json()).catch(() => null)
+        ]);
+
+        if (newsRes && newsRes.success && Array.isArray(newsRes.data)) {
+          state.news = newsRes.data;
+          write('news');
+        }
+        if (galleryRes && galleryRes.success && Array.isArray(galleryRes.data)) {
+          state.gallery = galleryRes.data;
+          write('gallery');
+        }
+        if (playersRes && playersRes.success && Array.isArray(playersRes.data)) {
+          state.players = playersRes.data;
+          write('players');
+        }
+        if (matchesRes && matchesRes.success && Array.isArray(matchesRes.data)) {
+          state.matches = matchesRes.data;
+          write('matches');
+        }
+
+        renderAll();
+      } catch (err) {
+        console.error('Error fetching online database:', err);
+      }
     }
 
 
@@ -1303,22 +1354,34 @@
 
 
     /* =========================================================
-       CRUD
+       CRUD (ONLINE DATABASE)
     ========================================================= */
 
-    function upsert(type, values) {
+    async function upsert(type, values) {
+      const endpoint = type === 'players' ? '/api/players'
+        : type === 'news' ? '/api/news'
+        : type === 'gallery' ? '/api/gallery'
+        : '/api/admin-matches';
 
-      const index =
-        state[type].findIndex(
-          item => item.id === values.id
-        );
+      const isEdit = Boolean(values.id && state[type].some(item => item.id === values.id));
+      const url = isEdit ? `${endpoint}/${encodeURIComponent(values.id)}` : endpoint;
+      const method = isEdit ? 'PUT' : 'POST';
 
-      const item = {
-        ...values,
-        id: values.id || uid(),
-        savedAt: new Date().toISOString()
-      };
+      const response = await fetch(url, {
+        method,
+        headers: getAdminHeaders(),
+        body: JSON.stringify(values)
+      });
 
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: 'Operation failed' }));
+        throw new Error(err.error || 'Failed to save to online database.');
+      }
+
+      const json = await response.json();
+      const item = json.data || values;
+
+      const index = state[type].findIndex(entry => entry.id === item.id);
       if (index >= 0) {
         state[type][index] = item;
       } else {
@@ -1326,28 +1389,38 @@
       }
 
       write(type);
-
-      return item;
-
-    }
-
-
-    function removeItem(type, id) {
-
-      state[type] =
-        state[type].filter(
-          item => item.id !== id
-        );
-
-      write(type);
-
       renderAll();
-
-      showNotice(
-        'Item deleted from this browser.'
-      );
-
+      return item;
     }
+
+
+    async function removeItem(type, id) {
+      const endpoint = type === 'players' ? '/api/players'
+        : type === 'news' ? '/api/news'
+        : type === 'gallery' ? '/api/gallery'
+        : '/api/admin-matches';
+
+      try {
+        const response = await fetch(`${endpoint}/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: getAdminHeaders()
+        });
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({ error: 'Delete failed' }));
+          throw new Error(err.error || 'Failed to delete from online database.');
+        }
+
+        state[type] = state[type].filter(item => item.id !== id);
+        write(type);
+        renderAll();
+        showNotice('Item deleted from online database.');
+      } catch (err) {
+        console.error('Delete failed:', err);
+        showNotice(err.message || 'Delete failed. Please check your connection.', true);
+      }
+    }
+
 
 
     function editItem(type, id) {
@@ -2166,13 +2239,11 @@
 
               }
 
-
               const item =
                 state.gallery.find(
                   entry =>
                     entry.id === galleryEditId
                 );
-
 
               if (!item) {
 
@@ -2187,25 +2258,20 @@
 
               }
 
+              try {
+                await upsert('gallery', {
+                  id: item.id,
+                  name: values.name || 'Gallery image',
+                  bio: values.bio || '',
+                  src: item.src
+                });
 
-              item.name =
-                values.name ||
-                'Gallery image';
-
-              item.bio =
-                values.bio || '';
-
-              write('gallery');
-
-              galleryEditId = '';
-
-              clearForm(form);
-
-              renderAll();
-
-              showNotice(
-                'Gallery item updated in this browser.'
-              );
+                galleryEditId = '';
+                clearForm(form);
+                showNotice('Gallery item updated in online database.');
+              } catch (err) {
+                showNotice('Failed to update gallery item. Please try again.', true);
+              }
 
               return;
 
@@ -2241,17 +2307,17 @@
                 form.elements.photo
                   ?.files?.[0];
 
-
               if (file) {
-
-                playerPhotoData =
-                  await readImageFile(file);
-
+                showNotice('Uploading player photo to cloud storage...');
+                try {
+                  values.photo = await uploadImageFile(file);
+                } catch (uploadErr) {
+                  showNotice('Photo upload failed. Please check your connection.', true);
+                  return;
+                }
+              } else if (playerPhotoData) {
+                values.photo = playerPhotoData;
               }
-
-
-              values.photo =
-                playerPhotoData || '';
 
               /*
                 IMPORTANT:
@@ -2273,69 +2339,59 @@
                 form.elements.coverImage
                   ?.files?.[0];
 
-
               if (coverFile) {
-
-                newsCoverData =
-                  await readImageFile(
-                    coverFile
-                  );
-
+                showNotice('Uploading cover image to cloud storage...');
+                try {
+                  values.coverImage = await uploadImageFile(coverFile);
+                } catch (uploadErr) {
+                  showNotice('Cover image upload failed. Please check your connection.', true);
+                  return;
+                }
+              } else if (newsCoverData) {
+                values.coverImage = newsCoverData;
               }
 
-
-              values.coverImage =
-                newsCoverData || '';
-
             }
 
 
-            /* SAVE */
+            /* SAVE TO ONLINE DATABASE */
 
-            upsert(
-              type,
-              values
-            );
+            try {
+              await upsert(
+                type,
+                values
+              );
 
+              localStorage.removeItem(
+                draftKey
+              );
 
-            localStorage.removeItem(
-              draftKey
-            );
+              clearForm(form);
 
+              if (type === 'players') {
+                playerPhotoData = '';
+                updatePlayerPhotoPreview('');
+              }
 
-            clearForm(form);
+              if (type === 'news') {
+                newsCoverData = '';
+                updateNewsCoverPreview('');
+              }
 
-
-            if (type === 'players') {
-
-              playerPhotoData = '';
-
-              updatePlayerPhotoPreview('');
-
+              showNotice(
+                `${
+                  type === 'players'
+                    ? 'Player'
+                    : type === 'news'
+                    ? 'News item'
+                    : 'Match'
+                } saved to online database.`
+              );
+            } catch (saveError) {
+              console.error('Save error:', saveError);
+              showNotice('Upload failed. Please check your connection and try again.', true);
             }
 
-
-            if (type === 'news') {
-
-              newsCoverData = '';
-
-              updateNewsCoverPreview('');
-
-            }
-
-
-            renderAll();
-
-
-            showNotice(
-              `${
-                type === 'players'
-                  ? 'Player'
-                  : type === 'news'
-                  ? 'News item'
-                  : 'Match'
-              } saved in this browser.`
-            );
 
           }
         );
@@ -2462,7 +2518,7 @@
 
           if (
             window.confirm(
-              'Delete this saved item from this browser?'
+              'Delete this item from the online database?'
             )
           ) {
 
@@ -2480,7 +2536,7 @@
 
 
     /* =========================================================
-       GALLERY UPLOAD
+       GALLERY UPLOAD (ONLINE CLOUD STORAGE & DATABASE)
     ========================================================= */
 
     const dropZone =
@@ -2524,60 +2580,52 @@
       }
 
 
+      const title =
+        document
+          .getElementById(
+            'galleryTitle'
+          )
+          .value
+          .trim();
+
+
+      const bio =
+        document
+          .getElementById(
+            'galleryBio'
+          )
+          .value
+          .trim();
+
+
+      const formData = new FormData();
+      images.forEach(f => formData.append('images', f));
+      formData.append('title', title);
+      formData.append('bio', bio);
+
+      const token = sessionStorage.getItem('adminToken') || 'admin-active-session';
+      showNotice('Uploading images to cloud storage...');
+
       try {
+        const response = await fetch('/api/gallery/upload', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
 
-        const sources =
-          await Promise.all(
-            images.map(
-              file => compressImage(file)
-            )
-          );
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({ error: 'Upload failed' }));
+          throw new Error(err.error || 'Upload failed');
+        }
 
+        const data = await response.json();
 
-        const title =
-          document
-            .getElementById(
-              'galleryTitle'
-            )
-            .value
-            .trim();
-
-
-        const bio =
-          document
-            .getElementById(
-              'galleryBio'
-            )
-            .value
-            .trim();
-
-
-        sources.forEach(
-          (src, index) => {
-
-            state.gallery.unshift({
-
-              id: uid(),
-
-              name:
-                title ||
-                images[index].name,
-
-              bio,
-
-              src,
-
-              savedAt:
-                new Date().toISOString()
-
-            });
-
-          }
-        );
-
-
-        write('gallery');
-
+        if (data.data && Array.isArray(data.data)) {
+          data.data.forEach(item => {
+            state.gallery.unshift(item);
+          });
+          write('gallery');
+        }
 
         document
           .getElementById(
@@ -2585,26 +2633,22 @@
           )
           .reset();
 
-
         galleryEditId = '';
 
-
         renderAll();
-
 
         showNotice(
           `${images.length} image${
             images.length === 1
               ? ''
               : 's'
-          } saved in this browser.`
+          } saved to online database.`
         );
 
-
       } catch (error) {
-
+        console.error('Gallery upload failed:', error);
         showNotice(
-          'One or more gallery images could not be processed.',
+          'Upload failed. Please check your connection and try again.',
           true
         );
 
@@ -2883,13 +2927,26 @@
 
 
     /* =========================================================
-       INITIAL RENDER
+       INITIAL RENDER & ONLINE DATABASE SYNC
     ========================================================= */
 
     renderAll();
+    loadAllData();
+
+    // Listen for real-time updates across browsers
+    try {
+      const eventSource = new EventSource('/api/events');
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data && data.type && data.type !== 'connected') {
+            loadAllData();
+          }
+        } catch (e) {}
+      };
+    } catch (e) {}
 
   </script>
 
 </body>
 </html>
-```

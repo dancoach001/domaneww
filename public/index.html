@@ -123,12 +123,24 @@
 </footer>
 
 <script>
-  (function renderSavedFixture() {
+  async function loadOnlineFixture() {
     const section = document.getElementById('upcomingFixtureSection');
     const fixture = document.getElementById('upcomingFixture');
+    if (!section || !fixture) return;
+
     let matches = [];
-    try { matches = JSON.parse(localStorage.getItem('domaAdminMatches') || '[]'); } catch (error) { matches = []; }
-    if (!section || !fixture || !Array.isArray(matches)) return;
+    try {
+      const res = await fetch('/api/admin-matches');
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        matches = json.data;
+        try { localStorage.setItem('domaAdminMatches', JSON.stringify(matches)); } catch (e) {}
+      }
+    } catch (error) {
+      try { matches = JSON.parse(localStorage.getItem('domaAdminMatches') || '[]'); } catch (e) { matches = []; }
+    }
+
+    if (!Array.isArray(matches) || !matches.length) return;
 
     const now = new Date();
     const upcoming = matches
@@ -136,6 +148,7 @@
       .map((match) => ({ match, date: new Date(`${match.date}T${match.time || '23:59'}:00`) }))
       .filter((entry) => !Number.isNaN(entry.date.getTime()) && entry.date >= now)
       .sort((a, b) => a.date - b.date)[0]?.match;
+
     if (!upcoming) return;
     section.classList.remove('hidden');
 
@@ -185,13 +198,25 @@
     details.href = 'matches.html';
     details.textContent = 'Details';
     fixture.replaceChildren(dateBlock, teams, meta, details);
-  }());
+  }
 
-  (function renderSavedNews() {
+  async function loadOnlineNews() {
     const grid = document.getElementById('latestNewsGrid');
+    if (!grid) return;
+
     let posts = [];
-    try { posts = JSON.parse(localStorage.getItem('domaNews') || '[]'); } catch (error) { posts = []; }
-    if (!grid || !Array.isArray(posts) || !posts.length) return;
+    try {
+      const res = await fetch('/api/news');
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data) && json.data.length) {
+        posts = json.data;
+        try { localStorage.setItem('domaNews', JSON.stringify(posts)); } catch (e) {}
+      }
+    } catch (error) {
+      try { posts = JSON.parse(localStorage.getItem('domaNews') || '[]'); } catch (e) { posts = []; }
+    }
+
+    if (!Array.isArray(posts) || !posts.length) return;
     grid.replaceChildren(...posts.map((post) => {
       const card = document.createElement('article');
       card.className = 'news-card';
@@ -205,7 +230,24 @@
       const date = document.createElement('small'); date.className = 'mt-3 block text-[11px] font-semibold text-[#7d96b8]'; date.textContent = post.savedAt ? new Date(post.savedAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently published';
       content.append(category, headline, summary, date); card.append(image, content); return card;
     }));
-  }());
+  }
+
+  loadOnlineFixture();
+  loadOnlineNews();
+
+  // Real-time synchronization across devices and browsers
+  try {
+    const eventSource = new EventSource('/api/events');
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data) {
+          if (data.type === 'matches') loadOnlineFixture();
+          if (data.type === 'news') loadOnlineNews();
+        }
+      } catch (e) {}
+    };
+  } catch (e) {}
 </script>
 <script src="matches.js" onload="initMobileMenu()"></script>
 </body>

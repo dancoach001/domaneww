@@ -60,18 +60,30 @@
 </footer>
 
 <script>
-  (function renderPlayerDirectory() {
+  async function loadOnlineSquad() {
     const directory = document.getElementById('playerDirectory');
     if (!directory) return;
+
     let players = [];
-    try { players = JSON.parse(localStorage.getItem('domaPlayers') || '[]'); } catch (error) { players = []; }
+    try {
+      const res = await fetch('/api/players');
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        players = json.data;
+        try { localStorage.setItem('domaPlayers', JSON.stringify(players)); } catch (e) {}
+      }
+    } catch (error) {
+      try { players = JSON.parse(localStorage.getItem('domaPlayers') || '[]'); } catch (e) { players = []; }
+    }
+
     if (!Array.isArray(players) || !players.length) {
       const emptyState = document.createElement('p');
       emptyState.className = 'col-span-full rounded-xl border border-dashed border-[#cbdcf0] bg-white px-5 py-16 text-center text-sm text-[#7d96b8]';
       emptyState.textContent = 'No player profiles have been added yet.';
-      directory.appendChild(emptyState);
+      directory.replaceChildren(emptyState);
       return;
     }
+
     const positionLabels = {
       Goalkeeper: 'GK',
       Defender: 'DEF',
@@ -120,7 +132,22 @@
       return card;
     };
     directory.replaceChildren(...players.map(createCard));
-  }());
+  }
+
+  loadOnlineSquad();
+
+  // Real-time synchronization across devices and browsers
+  try {
+    const eventSource = new EventSource('/api/events');
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data && data.type === 'players') {
+          loadOnlineSquad();
+        }
+      } catch (e) {}
+    };
+  } catch (e) {}
 </script>
 <script src="matches.js" onload="initMobileMenu()"></script>
 </body>
