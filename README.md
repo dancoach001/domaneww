@@ -20,6 +20,17 @@ This project provides a local Node.js + Express backend that scrapes the officia
 3. Open the app in a browser:
    http://localhost:3000/matches.html
 
+## Shared admin content storage
+
+News, gallery images, squad players, and custom matches use Supabase when the
+server has `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` configured. Run the
+SQL in `schema.sql` in the Supabase SQL editor, create a `.env` from
+`.env.example`, and restart the server. The service-role key must remain only
+in the server environment; never place it in `public/` files.
+
+Without those variables the app uses its local SQLite/file fallback for local
+development, which is not shared between separate deployments or devices.
+
 ## API routes
 
 - `GET /api/npfl/matches` — NPFL fixtures/results JSON

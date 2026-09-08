@@ -134,10 +134,9 @@
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         matches = json.data;
-        try { localStorage.setItem('domaAdminMatches', JSON.stringify(matches)); } catch (e) {}
       }
     } catch (error) {
-      try { matches = JSON.parse(localStorage.getItem('domaAdminMatches') || '[]'); } catch (e) { matches = []; }
+      console.error('Unable to load matches from the online database.', error);
     }
 
     if (!Array.isArray(matches) || !matches.length) return;
@@ -210,10 +209,9 @@
       const json = await res.json();
       if (json.success && Array.isArray(json.data) && json.data.length) {
         posts = json.data;
-        try { localStorage.setItem('domaNews', JSON.stringify(posts)); } catch (e) {}
       }
     } catch (error) {
-      try { posts = JSON.parse(localStorage.getItem('domaNews') || '[]'); } catch (e) { posts = []; }
+      console.error('Unable to load news from the online database.', error);
     }
 
     if (!Array.isArray(posts) || !posts.length) return;

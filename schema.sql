@@ -116,6 +116,9 @@ CREATE POLICY "Allow authenticated users full access on matches"
     ON public.matches FOR ALL TO authenticated
     USING (true) WITH CHECK (true);
 
+-- The Express server uses SUPABASE_SERVICE_ROLE_KEY for admin writes.
+-- Never expose that key in public JavaScript or commit it to source control.
+
 -- ==============================================================================
 -- STORAGE BUCKET (for Gallery, News Covers, Player Photos)
 -- Run in Supabase SQL editor or create the bucket 'doma-uploads' in the dashboard.

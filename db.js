@@ -17,6 +17,38 @@ if (SUPABASE_URL && SUPABASE_KEY) {
   }
 }
 
+function throwSupabaseError(operation, error) {
+  if (error) {
+    throw new Error(`Supabase ${operation} failed: ${error.message || error}`);
+  }
+}
+
+async function uploadStorageFile(filePath, buffer, contentType) {
+  if (!supabase) {
+    return null;
+  }
+
+  const { error } = await supabase.storage
+    .from('doma-uploads')
+    .upload(filePath, buffer, {
+      contentType,
+      upsert: false,
+    });
+
+  throwSupabaseError('storage upload', error);
+  const { data } = supabase.storage.from('doma-uploads').getPublicUrl(filePath);
+  return data.publicUrl;
+}
+
+async function deleteStorageFile(filePath) {
+  if (!supabase || !filePath) {
+    return;
+  }
+
+  const { error } = await supabase.storage.from('doma-uploads').remove([filePath]);
+  throwSupabaseError('storage delete', error);
+}
+
 // Ensure local storage directories exist
 const dataDir = path.join(__dirname, 'data');
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
@@ -91,7 +123,8 @@ async function getNews() {
       .select('*')
       .order('saved_at', { ascending: false });
 
-    if (!error && Array.isArray(data)) {
+    throwSupabaseError('news read', error);
+    if (Array.isArray(data)) {
       return data.map(row => ({
         id: row.id,
         headline: row.headline,
@@ -128,7 +161,7 @@ async function saveNews(item) {
   };
 
   if (supabase) {
-    await supabase.from('news').upsert({
+    const { error } = await supabase.from('news').upsert({
       id: record.id,
       headline: record.headline,
       category: record.category,
@@ -137,6 +170,7 @@ async function saveNews(item) {
       cover_image: record.coverImage,
       saved_at: record.savedAt
     });
+    throwSupabaseError('news write', error);
   }
 
   const stmt = localDb.prepare(`
@@ -166,7 +200,8 @@ async function saveNews(item) {
 
 async function deleteNews(id) {
   if (supabase) {
-    await supabase.from('news').delete().eq('id', id);
+    const { error } = await supabase.from('news').delete().eq('id', id);
+    throwSupabaseError('news delete', error);
   }
   const stmt = localDb.prepare('DELETE FROM news WHERE id = ?');
   stmt.run(id);
@@ -184,7 +219,8 @@ async function getGallery() {
       .select('*')
       .order('saved_at', { ascending: false });
 
-    if (!error && Array.isArray(data)) {
+    throwSupabaseError('gallery read', error);
+    if (Array.isArray(data)) {
       return data.map(row => ({
         id: row.id,
         name: row.name,
@@ -215,13 +251,14 @@ async function saveGallery(item) {
   };
 
   if (supabase) {
-    await supabase.from('gallery').upsert({
+    const { error } = await supabase.from('gallery').upsert({
       id: record.id,
       name: record.name,
       bio: record.bio,
       src: record.src,
       saved_at: record.savedAt
     });
+    throwSupabaseError('gallery write', error);
   }
 
   const stmt = localDb.prepare(`
@@ -240,7 +277,8 @@ async function saveGallery(item) {
 
 async function deleteGallery(id) {
   if (supabase) {
-    await supabase.from('gallery').delete().eq('id', id);
+    const { error } = await supabase.from('gallery').delete().eq('id', id);
+    throwSupabaseError('gallery delete', error);
   }
   const stmt = localDb.prepare('DELETE FROM gallery WHERE id = ?');
   stmt.run(id);
@@ -258,7 +296,8 @@ async function getPlayers() {
       .select('*')
       .order('saved_at', { ascending: false });
 
-    if (!error && Array.isArray(data)) {
+    throwSupabaseError('players read', error);
+    if (Array.isArray(data)) {
       return data.map(row => ({
         id: row.id,
         playerName: row.player_name || row.playerName,
@@ -295,7 +334,7 @@ async function savePlayer(item) {
   };
 
   if (supabase) {
-    await supabase.from('players').upsert({
+    const { error } = await supabase.from('players').upsert({
       id: record.id,
       player_name: record.playerName,
       position: record.position,
@@ -304,6 +343,7 @@ async function savePlayer(item) {
       photo: record.photo,
       saved_at: record.savedAt
     });
+    throwSupabaseError('players write', error);
   }
 
   const stmt = localDb.prepare(`
@@ -333,7 +373,8 @@ async function savePlayer(item) {
 
 async function deletePlayer(id) {
   if (supabase) {
-    await supabase.from('players').delete().eq('id', id);
+    const { error } = await supabase.from('players').delete().eq('id', id);
+    throwSupabaseError('players delete', error);
   }
   const stmt = localDb.prepare('DELETE FROM players WHERE id = ?');
   stmt.run(id);
@@ -351,7 +392,8 @@ async function getMatches() {
       .select('*')
       .order('date', { ascending: true });
 
-    if (!error && Array.isArray(data)) {
+    throwSupabaseError('matches read', error);
+    if (Array.isArray(data)) {
       return data.map(row => ({
         id: row.id,
         homeTeam: row.home_team || row.homeTeam,
@@ -406,7 +448,7 @@ async function saveMatch(item) {
   };
 
   if (supabase) {
-    await supabase.from('matches').upsert({
+    const { error } = await supabase.from('matches').upsert({
       id: record.id,
       home_team: record.homeTeam,
       away_team: record.awayTeam,
@@ -421,6 +463,7 @@ async function saveMatch(item) {
       away_logo: record.awayLogo,
       saved_at: record.savedAt
     });
+    throwSupabaseError('matches write', error);
   }
 
   const stmt = localDb.prepare(`
@@ -465,7 +508,8 @@ async function saveMatch(item) {
 
 async function deleteMatch(id) {
   if (supabase) {
-    await supabase.from('matches').delete().eq('id', id);
+    const { error } = await supabase.from('matches').delete().eq('id', id);
+    throwSupabaseError('matches delete', error);
   }
   const stmt = localDb.prepare('DELETE FROM matches WHERE id = ?');
   stmt.run(id);
@@ -474,6 +518,8 @@ async function deleteMatch(id) {
 
 module.exports = {
   isSupabaseConfigured: () => Boolean(supabase),
+  uploadStorageFile,
+  deleteStorageFile,
   getNews,
   saveNews,
   deleteNews,

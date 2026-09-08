@@ -595,19 +595,9 @@
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         gallery = json.data;
-        try {
-          localStorage.setItem('domaGallery', JSON.stringify(gallery));
-        } catch (e) {}
       }
     } catch (error) {
-      try {
-        gallery =
-          JSON.parse(
-            localStorage.getItem('domaGallery') || '[]'
-          );
-      } catch (err) {
-        gallery = [];
-      }
+      console.error('Unable to load gallery from the online database.', error);
     }
 
     if (

@@ -70,10 +70,9 @@
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         players = json.data;
-        try { localStorage.setItem('domaPlayers', JSON.stringify(players)); } catch (e) {}
       }
     } catch (error) {
-      try { players = JSON.parse(localStorage.getItem('domaPlayers') || '[]'); } catch (e) { players = []; }
+      console.error('Unable to load squad from the online database.', error);
     }
 
     if (!Array.isArray(players) || !players.length) {

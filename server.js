@@ -7,9 +7,10 @@ const fs = require('fs');
 const crypto = require('crypto');
 const dotenv = require('dotenv');
 const multer = require('multer');
-const db = require('./db.js');
 
 dotenv.config();
+
+const db = require('./db.js');
 
 // Ensure public uploads directory exists
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
@@ -18,16 +19,7 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Configure multer storage for uploaded images
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
-    cb(null, `upload-${uniqueSuffix}${ext}`);
-  },
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
@@ -546,6 +538,30 @@ function broadcastEvent(type, action, data = null) {
   }
 }
 
+function createStoragePath(originalName) {
+  const ext = path.extname(originalName || '').toLowerCase() || '.jpg';
+  return `uploads/upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+}
+
+async function saveUploadedFile(file) {
+  const storagePath = createStoragePath(file.originalname);
+  const cloudUrl = await db.uploadStorageFile(storagePath, file.buffer, file.mimetype);
+
+  if (cloudUrl) {
+    return { url: cloudUrl, storagePath };
+  }
+
+  const filename = path.basename(storagePath);
+  fs.writeFileSync(path.join(uploadsDir, filename), file.buffer);
+  return { url: `/uploads/${filename}`, storagePath: null };
+}
+
+function getStoragePathFromUrl(fileUrl) {
+  const marker = '/storage/v1/object/public/doma-uploads/';
+  const index = String(fileUrl || '').indexOf(marker);
+  return index >= 0 ? decodeURIComponent(String(fileUrl).slice(index + marker.length)) : '';
+}
+
 // ==============================================================================
 // FILE UPLOADS (Gallery, Player Photos, News Covers)
 // ==============================================================================
@@ -557,8 +573,12 @@ app.post('/api/upload', requireAdmin, (req, res) => {
     }
 
     if (req.file) {
-      const publicUrl = `/uploads/${req.file.filename}`;
-      return res.json({ success: true, url: publicUrl });
+      return saveUploadedFile(req.file)
+        .then(({ url }) => res.json({ success: true, url }))
+        .catch((uploadError) => {
+          console.error('Cloud image upload failed:', uploadError.message);
+          res.status(500).json({ success: false, error: 'Upload failed. Please check your connection and try again.' });
+        });
     }
 
     // Support base64 upload fallback
@@ -568,9 +588,16 @@ app.post('/api/upload', requireAdmin, (req, res) => {
         if (matches) {
           const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
           const buffer = Buffer.from(matches[2], 'base64');
-          const filename = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-          fs.writeFileSync(path.join(uploadsDir, filename), buffer);
-          return res.json({ success: true, url: `/uploads/${filename}` });
+          return saveUploadedFile({
+            originalname: `upload.${ext}`,
+            mimetype: `image/${matches[1]}`,
+            buffer,
+          })
+            .then(({ url }) => res.json({ success: true, url }))
+            .catch((uploadError) => {
+              console.error('Cloud image upload failed:', uploadError.message);
+              res.status(500).json({ success: false, error: 'Upload failed. Please check your connection and try again.' });
+            });
         }
       } catch (e) {
         return res.status(500).json({ success: false, error: 'Failed to process image buffer.' });
@@ -671,10 +698,11 @@ app.post('/api/gallery/upload', requireAdmin, (req, res) => {
       const savedItems = [];
 
       for (const file of files) {
+        const uploaded = await saveUploadedFile(file);
         const item = await db.saveGallery({
           name: title || file.originalname.replace(/\.[^/.]+$/, ''),
           bio,
-          src: `/uploads/${file.filename}`,
+          src: uploaded.url,
         });
         savedItems.push(item);
       }
@@ -701,7 +729,13 @@ app.put('/api/gallery/:id', requireAdmin, async (req, res) => {
 
 app.delete('/api/gallery/:id', requireAdmin, async (req, res) => {
   try {
+    const gallery = await db.getGallery();
+    const item = gallery.find((entry) => entry.id === req.params.id);
     await db.deleteGallery(req.params.id);
+    const storagePath = getStoragePathFromUrl(item && item.src);
+    if (storagePath) {
+      await db.deleteStorageFile(storagePath);
+    }
     broadcastEvent('gallery', 'delete', { id: req.params.id });
     res.json({ success: true, message: 'Gallery item deleted.' });
   } catch (error) {

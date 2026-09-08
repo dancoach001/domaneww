@@ -1058,13 +1058,7 @@
     }
 
     function readCache(type) {
-      try {
-        return JSON.parse(
-          localStorage.getItem(collections[type]) || '[]'
-        );
-      } catch (error) {
-        return [];
-      }
+      return [];
     }
 
     const state = {
@@ -1079,12 +1073,7 @@
     let galleryEditId = '';
 
     function write(type) {
-      try {
-        localStorage.setItem(
-          collections[type],
-          JSON.stringify(state[type])
-        );
-      } catch (e) {}
+      return undefined;
     }
 
     async function loadAllData() {
