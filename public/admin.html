@@ -68,6 +68,13 @@
           Matches
         </a>
 
+        <a href="#live-streams"
+           class="admin-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/65 transition hover:bg-white/10 hover:text-white"
+           data-section="live-streams">
+          <span class="text-base">●</span>
+          Live Stream
+        </a>
+
         <a href="#news"
            class="admin-nav-link flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-white/65 transition hover:bg-white/10 hover:text-white"
            data-section="news">
@@ -476,6 +483,35 @@
 
           <div id="matchList" class="space-y-3"></div>
 
+        </section>
+
+        <!-- ================= LIVE STREAM ================= -->
+        <section id="live-streams" class="admin-section hidden space-y-6">
+          <div>
+            <p class="text-xs font-black uppercase tracking-[2px] text-[#2161c7]">Broadcast desk</p>
+            <h2 class="mt-2 text-3xl font-black text-[#0a2550]">Live stream management</h2>
+            <p class="mt-2 text-sm text-[#6d83a2]">Connect a provider-hosted player or HLS URL. The club server does not carry video traffic.</p>
+          </div>
+
+          <form id="liveStreamForm" class="admin-form rounded-xl border border-[#dbe7f7] bg-white p-6 shadow-[0_12px_30px_rgba(24,70,130,.06)]">
+            <input type="hidden" name="id">
+            <div class="grid gap-5 md:grid-cols-2">
+              <label class="field md:col-span-2">Stream title<input name="title" required placeholder="Doma United FC vs ..."></label>
+              <label class="field">Match / event name<input name="eventName" placeholder="Matchday 12"></label>
+              <label class="field">Teams<input name="teams" placeholder="Doma United FC vs Opponent"></label>
+              <label class="field">Competition<input name="competition" placeholder="NPFL"></label>
+              <label class="field">Scheduled start<input name="scheduledStart" type="datetime-local"></label>
+              <label class="field md:col-span-2">Stream or embed URL<input name="streamUrl" type="url" required placeholder="https://provider.example/player/... or https://cdn.example/live.m3u8"><span class="mt-2 block text-[11px] font-semibold text-[#7d96b8]">Use a provider embed URL, HLS URL, or compatible video URL. RTMP ingest URLs cannot play directly in a browser.</span></label>
+              <label class="field md:col-span-2">Description<textarea name="description" rows="3" placeholder="Match context or broadcast notes"></textarea></label>
+              <label class="field">Thumbnail<input id="streamThumbnailInput" name="thumbnail" type="file" accept="image/*" class="file-input"><span id="streamThumbnailStatus" class="mt-2 block text-[11px] font-semibold text-[#7d96b8]">Optional broadcast artwork.</span></label>
+              <label class="field flex items-center gap-3 pt-6"><input name="status" type="checkbox" value="live" class="h-4 w-4 accent-[#2161c7]"><span>Activate stream as LIVE</span></label>
+            </div>
+            <div class="mt-7 flex flex-wrap justify-end gap-3">
+              <button type="button" class="rounded-lg border border-[#cbdcf0] px-5 py-3 text-xs font-black uppercase tracking-[.7px] text-[#2161c7]" data-clear>Clear</button>
+              <button class="rounded-lg bg-[#2161c7] px-5 py-3 text-xs font-black uppercase tracking-[.7px] text-white shadow-lg shadow-[#2161c7]/20 transition hover:bg-[#1850a4]">Save stream</button>
+            </div>
+          </form>
+          <div id="liveStreamList" class="space-y-3"></div>
         </section>
 
         <!-- ================= NEWS ================= -->
@@ -931,6 +967,7 @@
       news: 'domaNews',
       matches: 'domaAdminMatches',
       gallery: 'domaGallery'
+      ,liveStreams: 'domaLiveStreams'
     };
 
     const draftKey = 'domaAdminDrafts';
@@ -1066,6 +1103,7 @@
       news: readCache('news'),
       matches: readCache('matches'),
       gallery: readCache('gallery')
+      ,liveStreams: readCache('liveStreams')
     };
 
     let playerPhotoData = '';
@@ -1078,11 +1116,12 @@
 
     async function loadAllData() {
       try {
-        const [newsRes, galleryRes, playersRes, matchesRes] = await Promise.all([
+        const [newsRes, galleryRes, playersRes, matchesRes, liveStreamsRes] = await Promise.all([
           fetch('/api/news').then(r => r.json()).catch(() => null),
           fetch('/api/gallery').then(r => r.json()).catch(() => null),
           fetch('/api/players').then(r => r.json()).catch(() => null),
-          fetch('/api/admin-matches').then(r => r.json()).catch(() => null)
+          fetch('/api/admin-matches').then(r => r.json()).catch(() => null),
+          fetch('/api/live-streams').then(r => r.json()).catch(() => null)
         ]);
 
         if (newsRes && newsRes.success && Array.isArray(newsRes.data)) {
@@ -1100,6 +1139,10 @@
         if (matchesRes && matchesRes.success && Array.isArray(matchesRes.data)) {
           state.matches = matchesRes.data;
           write('matches');
+        }
+        if (liveStreamsRes && liveStreamsRes.success && Array.isArray(liveStreamsRes.data)) {
+          state.liveStreams = liveStreamsRes.data;
+          write('liveStreams');
         }
 
         renderAll();
@@ -1350,6 +1393,7 @@
       const endpoint = type === 'players' ? '/api/players'
         : type === 'news' ? '/api/news'
         : type === 'gallery' ? '/api/gallery'
+        : type === 'liveStreams' ? '/api/live-streams'
         : '/api/admin-matches';
 
       const isEdit = Boolean(values.id && state[type].some(item => item.id === values.id));
@@ -1387,6 +1431,7 @@
       const endpoint = type === 'players' ? '/api/players'
         : type === 'news' ? '/api/news'
         : type === 'gallery' ? '/api/gallery'
+        : type === 'liveStreams' ? '/api/live-streams'
         : '/api/admin-matches';
 
       try {
@@ -1429,6 +1474,8 @@
             ? 'newsForm'
             : type === 'gallery'
             ? 'galleryForm'
+            : type === 'liveStreams'
+            ? 'liveStreamForm'
             : 'matchForm'
         );
 
@@ -1485,6 +1532,13 @@
 
         return;
 
+      }
+
+      if (type === 'liveStreams') {
+        document.querySelector('[data-section="live-streams"]').click();
+        form.elements.status.checked = item.status === 'live';
+        showNotice('Loaded stream for editing. Save to update it.');
+        return;
       }
 
 
@@ -1858,6 +1912,17 @@
 
     }
 
+    function renderLiveStreams() {
+      const list = document.getElementById('liveStreamList');
+      if (!list) return;
+      list.innerHTML = state.liveStreams.length ? state.liveStreams.map(item => `
+        <article class="flex flex-col gap-4 rounded-xl border border-[#dbe7f7] bg-white p-5 shadow-sm sm:flex-row sm:items-center">
+          ${item.thumbnailUrl ? `<img src="${escapeHTML(item.thumbnailUrl)}" alt="" class="h-20 w-32 rounded-lg object-cover">` : '<div class="grid h-20 w-32 shrink-0 place-items-center rounded-lg bg-[#071b3a] text-[10px] font-black tracking-[1px] text-white">LIVE</div>'}
+          <div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><h3 class="font-black text-[#0a2550]">${escapeHTML(item.title)}</h3><span class="rounded-full ${item.status === 'live' ? 'bg-[#fff0f0] text-[#a53b3b]' : 'bg-[#eef5ff] text-[#2161c7]'} px-2 py-1 text-[10px] font-black uppercase">${item.status === 'live' ? 'LIVE' : 'OFFLINE'}</span></div><p class="mt-1 text-xs text-[#6d83a2]">${escapeHTML(item.eventName || item.competition || 'Broadcast')} · ${escapeHTML(item.teams || 'Teams TBC')}</p><p class="mt-1 truncate text-xs text-[#7d96b8]">${escapeHTML(item.streamUrl)}</p></div>
+          ${actions('liveStreams', item.id)}
+        </article>`).join('') : empty('No live streams configured yet. Add a provider URL above.');
+    }
+
 
     /* =========================================================
        DASHBOARD
@@ -1960,6 +2025,7 @@
       renderNews();
       renderPlayers();
       renderGallery();
+      renderLiveStreams();
       renderDashboard();
 
     }
@@ -2204,6 +2270,8 @@
                 ? 'news'
                 : formId === 'galleryForm'
                 ? 'gallery'
+                : formId === 'liveStreamForm'
+                ? 'liveStreams'
                 : 'matches';
 
 
@@ -2342,6 +2410,24 @@
 
             }
 
+            if (type === 'liveStreams') {
+              const thumbnailFile = form.elements.thumbnail?.files?.[0];
+              if (thumbnailFile) {
+                showNotice('Uploading stream thumbnail to cloud storage...');
+                try {
+                  values.thumbnailUrl = await uploadImageFile(thumbnailFile);
+                } catch (uploadErr) {
+                  showNotice('Thumbnail upload failed. Please check your connection.', true);
+                  return;
+                }
+              } else if (values.id) {
+                const current = state.liveStreams.find((stream) => stream.id === values.id);
+                values.thumbnailUrl = current?.thumbnailUrl || '';
+              }
+              values.status = form.elements.status.checked ? 'live' : 'offline';
+              delete values.thumbnail;
+            }
+
 
             /* SAVE TO ONLINE DATABASE */
 
@@ -2373,6 +2459,8 @@
                     ? 'Player'
                     : type === 'news'
                     ? 'News item'
+                    : type === 'liveStreams'
+                    ? 'Live stream'
                     : 'Match'
                 } saved to online database.`
               );

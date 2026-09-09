@@ -10,6 +10,7 @@ This project provides a local Node.js + Express backend that scrapes the officia
 - Separate Doma United team view
 - Responsive football-themed design
 - Friendly empty/error states without fake data
+- Provider-ready Live Stream page with admin controls
 
 ## Setup
 
@@ -30,6 +31,28 @@ in the server environment; never place it in `public/` files.
 
 Without those variables the app uses its local SQLite/file fallback for local
 development, which is not shared between separate deployments or devices.
+
+## Live streaming
+
+Run the new `live_streams` table and its policies from `schema.sql` in Supabase.
+The existing public `doma-uploads` bucket is reused for stream thumbnails, so
+no new bucket is required. Keep `SUPABASE_SERVICE_ROLE_KEY` on Render only.
+
+An administrator signs in at `/admin-login.html`, opens **Live Stream**, enters
+the provider embed/player or HLS URL, adds match details and an optional
+thumbnail, then checks **Activate stream as LIVE** and saves. Visitors use
+`/live.html`; the page polls every 30 seconds and also listens for server
+events. Render never relays video bytes. YouTube watch URLs are converted to
+embeds, iframe URLs open in an iframe, HLS/video URLs use a browser player, and
+RTMP or unsupported ingest URLs show an external provider-player fallback.
+
+Deploy with:
+
+```text
+npm install
+npm run build
+npm start
+```
 
 ## API routes
 

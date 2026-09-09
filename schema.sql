@@ -54,6 +54,22 @@ CREATE TABLE IF NOT EXISTS public.matches (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 5. LIVE STREAMS TABLE
+CREATE TABLE IF NOT EXISTS public.live_streams (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    event_name TEXT,
+    teams TEXT,
+    competition TEXT,
+    stream_url TEXT NOT NULL,
+    thumbnail_url TEXT,
+    scheduled_start TIMESTAMPTZ,
+    status TEXT NOT NULL DEFAULT 'offline' CHECK (status IN ('live', 'offline')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- Public can READ (SELECT).
@@ -64,6 +80,7 @@ ALTER TABLE public.news ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.gallery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.players ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.matches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.live_streams ENABLE ROW LEVEL SECURITY;
 
 -- Public READ policies
 CREATE POLICY "Allow public read access to news"
@@ -82,6 +99,10 @@ CREATE POLICY "Allow public read access to matches"
     ON public.matches FOR SELECT TO anon, authenticated
     USING (true);
 
+CREATE POLICY "Allow public read access to live streams"
+    ON public.live_streams FOR SELECT TO anon, authenticated
+    USING (true);
+
 -- Admin WRITE policies (using service_role or authenticated users)
 CREATE POLICY "Allow full access to service_role on news"
     ON public.news FOR ALL TO service_role
@@ -97,6 +118,10 @@ CREATE POLICY "Allow full access to service_role on players"
 
 CREATE POLICY "Allow full access to service_role on matches"
     ON public.matches FOR ALL TO service_role
+    USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow full access to service_role on live streams"
+    ON public.live_streams FOR ALL TO service_role
     USING (true) WITH CHECK (true);
 
 -- Also allow authenticated admin users to insert/update/delete

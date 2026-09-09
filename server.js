@@ -838,6 +838,71 @@ app.delete('/api/admin-matches/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// ============================================================================
+// LIVE STREAMS REST API
+// ============================================================================
+
+function streamPlayerType(streamUrl) {
+  const value = String(streamUrl || '').trim();
+  const lower = value.toLowerCase();
+  if (/\.m3u8(?:$|[?#])/.test(lower)) return 'hls';
+  if (/\.(mp4|webm|ogg)(?:$|[?#])/.test(lower)) return 'video';
+  if (/youtube\.com\/watch\?v=|youtu\.be\//.test(lower)) return 'youtube';
+  if (/rtmp:\/\//.test(lower)) return 'external';
+  return 'iframe';
+}
+
+function publicStream(record) {
+  return { ...record, playerType: streamPlayerType(record.streamUrl) };
+}
+
+app.get('/api/live-streams', async (req, res) => {
+  try {
+    const streams = await db.getLiveStreams();
+    const active = streams.find((stream) => stream.status === 'live');
+    const next = streams
+      .filter((stream) => stream.status !== 'live' && stream.scheduledStart)
+      .sort((a, b) => new Date(a.scheduledStart) - new Date(b.scheduledStart))[0] || null;
+    res.json({ success: true, active: active ? publicStream(active) : null, next: next ? publicStream(next) : null, data: streams.map(publicStream) });
+  } catch (error) {
+    console.error('Error fetching live streams:', error.message);
+    res.status(500).json({ success: false, error: 'Unable to load live streams.' });
+  }
+});
+
+app.post('/api/live-streams', requireAdmin, async (req, res) => {
+  try {
+    const record = await db.saveLiveStream(req.body || {});
+    broadcastEvent('live-streams', 'save', record);
+    res.json({ success: true, data: publicStream(record) });
+  } catch (error) {
+    console.error('Error saving live stream:', error.message);
+    res.status(400).json({ success: false, error: error.message || 'Failed to save live stream.' });
+  }
+});
+
+app.put('/api/live-streams/:id', requireAdmin, async (req, res) => {
+  try {
+    const record = await db.saveLiveStream({ ...req.body, id: req.params.id });
+    broadcastEvent('live-streams', 'update', record);
+    res.json({ success: true, data: publicStream(record) });
+  } catch (error) {
+    console.error('Error updating live stream:', error.message);
+    res.status(400).json({ success: false, error: error.message || 'Failed to update live stream.' });
+  }
+});
+
+app.delete('/api/live-streams/:id', requireAdmin, async (req, res) => {
+  try {
+    await db.deleteLiveStream(req.params.id);
+    broadcastEvent('live-streams', 'delete', { id: req.params.id });
+    res.json({ success: true, message: 'Live stream deleted.' });
+  } catch (error) {
+    console.error('Error deleting live stream:', error.message);
+    res.status(500).json({ success: false, error: 'Failed to delete live stream.' });
+  }
+});
+
 // ==============================================================================
 // PUBLIC NPFL & COMBINED MATCHES
 // ==============================================================================

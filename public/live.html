@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Watch Doma United FC live broadcasts.">
+  <title>Live | Doma United FC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tailwind.css">
+  <style>
+    .live-shell { max-width: 1180px; margin: 0 auto; padding: 64px 6%; }
+    .live-card { overflow: hidden; border: 1px solid #dbe7f7; border-radius: 12px; background: #fff; box-shadow: 0 18px 45px rgba(24,70,130,.1); }
+    .player-frame { position: relative; aspect-ratio: 16 / 9; background: #061631; }
+    .player-frame iframe, .player-frame video, .player-frame img { width: 100%; height: 100%; border: 0; object-fit: cover; }
+    .player-placeholder { display: grid; height: 100%; place-items: center; padding: 24px; text-align: center; color: #b9cce6; }
+    .live-pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; background: #fff0f0; padding: 7px 12px; color: #a53b3b; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #d13e3e; box-shadow: 0 0 0 5px rgba(209,62,62,.14); }
+    .live-meta { padding: 28px; }
+    .next-card { margin-top: 24px; padding: 22px; border: 1px solid #dbe7f7; border-radius: 10px; background: #f7faff; }
+    @media (max-width: 550px) { .live-shell { padding: 44px 5%; } .live-meta { padding: 20px; } }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="brand" href="index.html"><img src="images/logo.png" alt="Doma United FC logo"><span>Doma United FC</span></a>
+    <a class="admin-link" href="admin-login.html" aria-label="Admin Login" title="Admin Login"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg></a>
+    <button class="menu-toggle" aria-label="Open menu">☰</button>
+    <div class="nav-links"><a href="index.html">Home</a><a href="matches.html">Matches</a><a class="active" href="live.html">Live</a><a href="squad.html">Squad</a><a href="standings.html">Standings</a><a href="news.html">News</a><a href="gallery.html">Gallery</a><a href="about.html">About</a></div>
+  </nav>
+
+  <header class="page-header"><p>DOMA UNITED FC BROADCAST</p><h1>Live Stream</h1><span>Watch official club broadcasts, match coverage and live events.</span></header>
+  <main class="live-shell">
+    <div id="liveState" class="live-card"></div>
+  </main>
+
+  <footer class="footer">
+    <div><img src="images/logo.png" alt="Doma United FC logo"><h3>Doma United FC</h3><p>The Savannah Tigers.</p></div>
+    <div><h4>Quick Links</h4><a href="matches.html">Matches</a><a href="live.html">Live</a><a href="news.html">News</a><a href="gallery.html">Gallery</a></div>
+    <div><h4>Club</h4><a href="about.html">About the Club</a><a href="admin-login.html">Admin</a></div>
+    <p class="copyright">© <span id="year"></span> Doma United FC. All rights reserved.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    const liveState = document.getElementById('liveState');
+    const escapeHTML = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+    const formatStart = (value) => value ? new Date(value).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short' }) : 'Start time to be announced';
+    const youtubeEmbed = (url) => { try { const parsed = new URL(url); const id = parsed.hostname.includes('youtu.be') ? parsed.pathname.slice(1) : parsed.searchParams.get('v'); return id ? `https://www.youtube.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0` : url; } catch (error) { return url; } };
+
+    function renderPlayer(stream) {
+      const url = escapeHTML(stream.streamUrl);
+      if (stream.playerType === 'youtube') return `<iframe src="${youtubeEmbed(stream.streamUrl)}" title="${escapeHTML(stream.title)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+      if (stream.playerType === 'iframe') return `<iframe src="${url}" title="${escapeHTML(stream.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+      if (stream.playerType === 'hls' || stream.playerType === 'video') return `<video id="streamVideo" controls autoplay playsinline poster="${escapeHTML(stream.thumbnailUrl)}"><source src="${url}"></video>`;
+      return stream.thumbnailUrl ? `<img src="${escapeHTML(stream.thumbnailUrl)}" alt="${escapeHTML(stream.title)}"><a class="btn primary absolute bottom-5 left-5" href="${url}" target="_blank" rel="noopener">Open provider player</a>` : `<div class="player-placeholder">This stream uses a provider ingest URL. Open the provider player to watch it.</div>`;
+    }
+
+    function render(data) {
+      const stream = data.active;
+      if (!stream) {
+        liveState.innerHTML = `<div class="p-8 text-center sm:p-14"><p class="eyebrow">BROADCAST DESK</p><h2 class="mt-3 text-3xl font-black uppercase text-[#0a2550]">No Live Stream Currently</h2><p class="mt-3 text-sm text-[#6d83a2]">The next Doma United FC broadcast will appear here when scheduled.</p>${data.next ? `<div class="next-card text-left"><p class="text-[10px] font-black uppercase tracking-[1px] text-[#2161c7]">Next scheduled stream</p><h3 class="mt-2 text-xl font-black text-[#0a2550]">${escapeHTML(data.next.title)}</h3><p class="mt-1 text-sm text-[#6d83a2]">${escapeHTML(data.next.eventName || data.next.competition || 'Club broadcast')} · ${formatStart(data.next.scheduledStart)}</p></div>` : ''}</div>`;
+        return;
+      }
+      liveState.innerHTML = `<div class="player-frame">${renderPlayer(stream)}</div><div class="live-meta"><div class="flex flex-wrap items-center justify-between gap-4"><span class="live-pill"><span class="live-dot"></span> Live now</span><span class="text-xs font-bold text-[#7d96b8]">${formatStart(stream.scheduledStart)}</span></div><p class="mt-5 text-xs font-black uppercase tracking-[2px] text-[#2161c7]">${escapeHTML(stream.competition || 'Doma United FC Broadcast')}</p><h2 class="mt-2 text-3xl font-black text-[#0a2550]">${escapeHTML(stream.title)}</h2><p class="mt-2 text-sm font-bold text-[#526b8e]">${escapeHTML(stream.eventName || 'Live match coverage')} · ${escapeHTML(stream.teams || 'Teams TBC')}</p>${stream.description ? `<p class="mt-5 border-t border-[#e3edf8] pt-5 text-sm leading-7 text-[#6d83a2]">${escapeHTML(stream.description)}</p>` : ''}<a class="btn primary mt-6" href="${escapeHTML(stream.streamUrl)}" target="_blank" rel="noopener">Watch Live</a></div>`;
+      const video = document.getElementById('streamVideo');
+      if (video && stream.playerType === 'hls' && window.Hls && window.Hls.isSupported()) { const hls = new Hls(); hls.loadSource(stream.streamUrl); hls.attachMedia(video); }
+    }
+
+    async function loadLiveStream() { try { const response = await fetch('/api/live-streams'); const data = await response.json(); if (response.ok && data.success) render(data); } catch (error) { liveState.innerHTML = '<div class="p-12 text-center text-sm text-[#6d83a2]">Live broadcast information is temporarily unavailable.</div>'; } }
+    document.getElementById('year').textContent = new Date().getFullYear();
+    loadLiveStream();
+    window.setInterval(loadLiveStream, 30000);
+    try { const events = new EventSource('/api/events'); events.onmessage = (event) => { const data = JSON.parse(event.data); if (data.type === 'live-streams') loadLiveStream(); }; } catch (error) {}
+  </script>
+  <script src="matches.js" onload="initMobileMenu()"></script>
+</body>
+</html>

@@ -108,6 +108,21 @@ localDb.exec(`
     away_logo TEXT,
     saved_at TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS live_streams (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    event_name TEXT,
+    teams TEXT,
+    competition TEXT,
+    stream_url TEXT NOT NULL,
+    thumbnail_url TEXT,
+    scheduled_start TEXT,
+    status TEXT DEFAULT 'offline',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
 `);
 
 console.log('[Database] Local SQLite ready at:', dbPath);
@@ -516,6 +531,108 @@ async function deleteMatch(id) {
   return { success: true };
 }
 
+// ============================================================================
+// LIVE STREAMS API
+// ============================================================================
+
+function mapLiveStream(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description || '',
+    eventName: row.event_name || row.eventName || '',
+    teams: row.teams || '',
+    competition: row.competition || '',
+    streamUrl: row.stream_url || row.streamUrl || '',
+    thumbnailUrl: row.thumbnail_url || row.thumbnailUrl || '',
+    scheduledStart: row.scheduled_start || row.scheduledStart || '',
+    status: String(row.status || 'offline').toLowerCase(),
+    createdAt: row.created_at || row.createdAt,
+    updatedAt: row.updated_at || row.updatedAt,
+  };
+}
+
+async function getLiveStreams() {
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('live_streams')
+      .select('*')
+      .order('scheduled_start', { ascending: true, nullsFirst: false });
+    throwSupabaseError('live streams read', error);
+    return Array.isArray(data) ? data.map(mapLiveStream) : [];
+  }
+
+  return localDb.prepare('SELECT * FROM live_streams ORDER BY scheduled_start ASC').all().map(mapLiveStream);
+}
+
+async function saveLiveStream(item) {
+  const now = new Date().toISOString();
+  const record = {
+    id: item.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    title: String(item.title || 'Doma United FC live stream').trim(),
+    description: String(item.description || '').trim(),
+    eventName: String(item.eventName || '').trim(),
+    teams: String(item.teams || '').trim(),
+    competition: String(item.competition || '').trim(),
+    streamUrl: String(item.streamUrl || '').trim(),
+    thumbnailUrl: String(item.thumbnailUrl || '').trim(),
+    scheduledStart: String(item.scheduledStart || '').trim(),
+    status: String(item.status || 'offline').toLowerCase() === 'live' ? 'live' : 'offline',
+    createdAt: item.createdAt || now,
+    updatedAt: now,
+  };
+
+  if (!record.streamUrl) throw new Error('A stream URL is required.');
+
+  if (supabase) {
+    if (record.status === 'live') {
+      const { error: deactivateError } = await supabase.from('live_streams').update({ status: 'offline', updated_at: now }).eq('status', 'live').neq('id', record.id);
+      throwSupabaseError('live stream activation', deactivateError);
+    }
+    const { error } = await supabase.from('live_streams').upsert({
+      id: record.id,
+      title: record.title,
+      description: record.description,
+      event_name: record.eventName,
+      teams: record.teams,
+      competition: record.competition,
+      stream_url: record.streamUrl,
+      thumbnail_url: record.thumbnailUrl,
+      scheduled_start: record.scheduledStart || null,
+      status: record.status,
+      created_at: record.createdAt,
+      updated_at: record.updatedAt,
+    });
+    throwSupabaseError('live stream write', error);
+  }
+
+  if (record.status === 'live') {
+    localDb.prepare('UPDATE live_streams SET status = ?, updated_at = ? WHERE status = ? AND id <> ?').run('offline', now, 'live', record.id);
+  }
+
+  localDb.prepare(`
+    INSERT INTO live_streams (id, title, description, event_name, teams, competition, stream_url, thumbnail_url, scheduled_start, status, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      title = excluded.title, description = excluded.description, event_name = excluded.event_name,
+      teams = excluded.teams, competition = excluded.competition, stream_url = excluded.stream_url,
+      thumbnail_url = excluded.thumbnail_url, scheduled_start = excluded.scheduled_start,
+      status = excluded.status, updated_at = excluded.updated_at
+  `).run(record.id, record.title, record.description, record.eventName, record.teams, record.competition,
+    record.streamUrl, record.thumbnailUrl, record.scheduledStart, record.status, record.createdAt, record.updatedAt);
+
+  return record;
+}
+
+async function deleteLiveStream(id) {
+  if (supabase) {
+    const { error } = await supabase.from('live_streams').delete().eq('id', id);
+    throwSupabaseError('live stream delete', error);
+  }
+  localDb.prepare('DELETE FROM live_streams WHERE id = ?').run(id);
+  return { success: true };
+}
+
 module.exports = {
   isSupabaseConfigured: () => Boolean(supabase),
   uploadStorageFile,
@@ -532,4 +649,7 @@ module.exports = {
   getMatches,
   saveMatch,
   deleteMatch
+  ,getLiveStreams,
+  saveLiveStream,
+  deleteLiveStream
 };
