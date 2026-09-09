@@ -842,18 +842,32 @@ app.delete('/api/admin-matches/:id', requireAdmin, async (req, res) => {
 // LIVE STREAMS REST API
 // ============================================================================
 
-function streamPlayerType(streamUrl) {
+function youtubeEmbedUrl(streamUrl) {
+  try {
+    const parsed = new URL(streamUrl);
+    let videoId = parsed.searchParams.get('v');
+    if (!videoId && (parsed.hostname === 'youtu.be' || parsed.hostname.endsWith('.youtu.be'))) videoId = parsed.pathname.split('/').filter(Boolean)[0];
+    if (!videoId && parsed.pathname.startsWith('/live/')) videoId = parsed.pathname.split('/')[2];
+    if (!videoId && parsed.pathname.startsWith('/embed/')) videoId = parsed.pathname.split('/')[2];
+    return videoId ? `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0` : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function streamPlayerType(streamUrl, provider) {
   const value = String(streamUrl || '').trim();
   const lower = value.toLowerCase();
+  if (String(provider || '').toLowerCase() === 'youtube' || /(?:youtube\.com|youtu\.be)/.test(lower)) return 'youtube';
   if (/\.m3u8(?:$|[?#])/.test(lower)) return 'hls';
   if (/\.(mp4|webm|ogg)(?:$|[?#])/.test(lower)) return 'video';
-  if (/youtube\.com\/watch\?v=|youtu\.be\//.test(lower)) return 'youtube';
   if (/rtmp:\/\//.test(lower)) return 'external';
   return 'iframe';
 }
 
 function publicStream(record) {
-  return { ...record, playerType: streamPlayerType(record.streamUrl) };
+  const playerType = streamPlayerType(record.streamUrl, record.provider);
+  return { ...record, playerType, embedUrl: playerType === 'youtube' ? youtubeEmbedUrl(record.streamUrl) : record.streamUrl };
 }
 
 app.get('/api/live-streams', async (req, res) => {

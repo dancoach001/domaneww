@@ -59,16 +59,29 @@ CREATE TABLE IF NOT EXISTS public.live_streams (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT,
+    provider TEXT NOT NULL DEFAULT 'youtube',
+    home_team TEXT,
+    away_team TEXT,
+    match_date DATE,
+    match_time TIME,
     event_name TEXT,
     teams TEXT,
     competition TEXT,
     stream_url TEXT NOT NULL,
     thumbnail_url TEXT,
     scheduled_start TIMESTAMPTZ,
-    status TEXT NOT NULL DEFAULT 'offline' CHECK (status IN ('live', 'offline')),
+    status TEXT NOT NULL DEFAULT 'offline' CHECK (status IN ('live', 'upcoming', 'offline')),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE public.live_streams ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'youtube';
+ALTER TABLE public.live_streams ADD COLUMN IF NOT EXISTS home_team TEXT;
+ALTER TABLE public.live_streams ADD COLUMN IF NOT EXISTS away_team TEXT;
+ALTER TABLE public.live_streams ADD COLUMN IF NOT EXISTS match_date DATE;
+ALTER TABLE public.live_streams ADD COLUMN IF NOT EXISTS match_time TIME;
+ALTER TABLE public.live_streams DROP CONSTRAINT IF EXISTS live_streams_status_check;
+ALTER TABLE public.live_streams ADD CONSTRAINT live_streams_status_check CHECK (status IN ('live', 'upcoming', 'offline'));
 
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES

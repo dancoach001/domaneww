@@ -497,17 +497,23 @@
             <input type="hidden" name="id">
             <div class="grid gap-5 md:grid-cols-2">
               <label class="field md:col-span-2">Stream title<input name="title" required placeholder="Doma United FC vs ..."></label>
-              <label class="field">Match / event name<input name="eventName" placeholder="Matchday 12"></label>
-              <label class="field">Teams<input name="teams" placeholder="Doma United FC vs Opponent"></label>
+              <label class="field">Home team<input name="homeTeam" required value="Doma United FC" placeholder="Home team"></label>
+              <label class="field">Away team<input name="awayTeam" required placeholder="Away team"></label>
               <label class="field">Competition<input name="competition" placeholder="NPFL"></label>
+              <label class="field">Match date<input name="matchDate" type="date" required></label>
+              <label class="field">Match time<input name="matchTime" type="time" required></label>
+              <label class="field">Stream provider<select name="provider"><option value="youtube">YouTube Live</option><option value="iframe">Other iframe provider</option><option value="hls">HLS provider</option></select></label>
+              <label class="field">Stream status<select name="status"><option value="upcoming">UPCOMING</option><option value="live">LIVE</option><option value="offline">OFFLINE</option></select></label>
+              <label class="field md:col-span-2">YouTube Live broadcast URL<input name="streamUrl" type="url" required placeholder="https://www.youtube.com/watch?v=VIDEO_ID"><span class="mt-2 block text-[11px] font-semibold text-[#7d96b8]">Paste the normal YouTube watch, live, youtu.be, or embed URL. It will play inside this website.</span></label>
+              <label class="field">Match / event name<input name="eventName" placeholder="Matchday 12"></label>
               <label class="field">Scheduled start<input name="scheduledStart" type="datetime-local"></label>
-              <label class="field md:col-span-2">Stream or embed URL<input name="streamUrl" type="url" required placeholder="https://provider.example/player/... or https://cdn.example/live.m3u8"><span class="mt-2 block text-[11px] font-semibold text-[#7d96b8]">Use a provider embed URL, HLS URL, or compatible video URL. RTMP ingest URLs cannot play directly in a browser.</span></label>
               <label class="field md:col-span-2">Description<textarea name="description" rows="3" placeholder="Match context or broadcast notes"></textarea></label>
               <label class="field">Thumbnail<input id="streamThumbnailInput" name="thumbnail" type="file" accept="image/*" class="file-input"><span id="streamThumbnailStatus" class="mt-2 block text-[11px] font-semibold text-[#7d96b8]">Optional broadcast artwork.</span></label>
-              <label class="field flex items-center gap-3 pt-6"><input name="status" type="checkbox" value="live" class="h-4 w-4 accent-[#2161c7]"><span>Activate stream as LIVE</span></label>
             </div>
             <div class="mt-7 flex flex-wrap justify-end gap-3">
               <button type="button" class="rounded-lg border border-[#cbdcf0] px-5 py-3 text-xs font-black uppercase tracking-[.7px] text-[#2161c7]" data-clear>Clear</button>
+              <button type="button" class="stream-action rounded-lg border border-[#b9d5fa] px-5 py-3 text-xs font-black uppercase tracking-[.7px] text-[#1850a4]" data-stream-action="stop">Stop stream</button>
+              <button type="button" class="stream-action rounded-lg border border-[#b9d5fa] px-5 py-3 text-xs font-black uppercase tracking-[.7px] text-[#1850a4]" data-stream-action="activate">Start / activate</button>
               <button class="rounded-lg bg-[#2161c7] px-5 py-3 text-xs font-black uppercase tracking-[.7px] text-white shadow-lg shadow-[#2161c7]/20 transition hover:bg-[#1850a4]">Save stream</button>
             </div>
           </form>
@@ -1536,7 +1542,7 @@
 
       if (type === 'liveStreams') {
         document.querySelector('[data-section="live-streams"]').click();
-        form.elements.status.checked = item.status === 'live';
+        form.elements.status.value = item.status || 'offline';
         showNotice('Loaded stream for editing. Save to update it.');
         return;
       }
@@ -1918,7 +1924,7 @@
       list.innerHTML = state.liveStreams.length ? state.liveStreams.map(item => `
         <article class="flex flex-col gap-4 rounded-xl border border-[#dbe7f7] bg-white p-5 shadow-sm sm:flex-row sm:items-center">
           ${item.thumbnailUrl ? `<img src="${escapeHTML(item.thumbnailUrl)}" alt="" class="h-20 w-32 rounded-lg object-cover">` : '<div class="grid h-20 w-32 shrink-0 place-items-center rounded-lg bg-[#071b3a] text-[10px] font-black tracking-[1px] text-white">LIVE</div>'}
-          <div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><h3 class="font-black text-[#0a2550]">${escapeHTML(item.title)}</h3><span class="rounded-full ${item.status === 'live' ? 'bg-[#fff0f0] text-[#a53b3b]' : 'bg-[#eef5ff] text-[#2161c7]'} px-2 py-1 text-[10px] font-black uppercase">${item.status === 'live' ? 'LIVE' : 'OFFLINE'}</span></div><p class="mt-1 text-xs text-[#6d83a2]">${escapeHTML(item.eventName || item.competition || 'Broadcast')} · ${escapeHTML(item.teams || 'Teams TBC')}</p><p class="mt-1 truncate text-xs text-[#7d96b8]">${escapeHTML(item.streamUrl)}</p></div>
+          <div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><h3 class="font-black text-[#0a2550]">${escapeHTML(item.title)}</h3><span class="rounded-full ${item.status === 'live' ? 'bg-[#fff0f0] text-[#a53b3b]' : item.status === 'upcoming' ? 'bg-[#eef5ff] text-[#2161c7]' : 'bg-[#f1f4f8] text-[#6d83a2]'} px-2 py-1 text-[10px] font-black uppercase">${escapeHTML(item.status)}</span></div><p class="mt-1 text-xs text-[#6d83a2]">${escapeHTML(item.homeTeam || item.teams || 'Home TBC')} vs ${escapeHTML(item.awayTeam || 'Away TBC')} · ${escapeHTML(item.competition || 'Competition TBC')}</p><p class="mt-1 truncate text-xs text-[#7d96b8]">${escapeHTML(item.provider || 'youtube')} · ${escapeHTML(item.streamUrl)}</p></div>
           ${actions('liveStreams', item.id)}
         </article>`).join('') : empty('No live streams configured yet. Add a provider URL above.');
     }
@@ -2424,7 +2430,6 @@
                 const current = state.liveStreams.find((stream) => stream.id === values.id);
                 values.thumbnailUrl = current?.thumbnailUrl || '';
               }
-              values.status = form.elements.status.checked ? 'live' : 'offline';
               delete values.thumbnail;
             }
 
@@ -2606,6 +2611,16 @@
 
           }
 
+        }
+
+        const streamAction = event.target.closest('.stream-action');
+        if (streamAction) {
+          const stream = state.liveStreams.find(item => item.id === streamAction.closest('article')?.querySelector('.edit-item')?.dataset.id);
+          if (!stream) return;
+          const status = streamAction.dataset.streamAction === 'activate' ? 'live' : 'offline';
+          upsert('liveStreams', { ...stream, status })
+            .then(() => showNotice(status === 'live' ? 'Stream activated.' : 'Stream stopped.'))
+            .catch(error => showNotice(error.message || 'Stream action failed.', true));
         }
 
       }

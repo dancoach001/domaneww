@@ -712,6 +712,21 @@ function initYear() {
 
 }
 
+async function updateLiveNavigation() {
+    const liveLink = document.querySelector('.nav-links a[href="live.html"]');
+    if (!liveLink) return;
+
+    try {
+        const response = await fetch('/api/live-streams');
+        const data = await response.json();
+        if (response.ok && data.success && data.active) {
+            liveLink.textContent = 'LIVE';
+            liveLink.classList.add('live-nav-link');
+            liveLink.setAttribute('aria-label', 'Live broadcast available');
+        }
+    } catch (error) {}
+}
+
 
 /* =====================================================
    INITIALIZE
@@ -722,6 +737,7 @@ document.addEventListener(
     function() {
 
         loadMatches();
+        updateLiveNavigation();
 
         // Real-time synchronization across devices and browsers
         try {

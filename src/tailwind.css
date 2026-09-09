@@ -20,6 +20,8 @@
   .brand span { @apply text-sm; }
   .nav-links { @apply order-3 flex items-center gap-8 text-[12px] font-extrabold; }
   .nav-links a { @apply relative py-8 uppercase tracking-[1px] text-white/70 transition hover:text-white; }
+  .nav-links a.live-nav-link { @apply text-[#ff8f8f]; }
+  .nav-links a.live-nav-link::before { content: '●'; @apply mr-2 text-[#ef5350]; }
   .nav-links a::after { @apply absolute bottom-0 left-0 h-[3px] w-0 bg-[#4e8cf0] transition-all content-['']; }
   .nav-links a:hover::after { @apply w-full; }
   .menu-toggle { @apply order-2 hidden border-0 bg-transparent text-[28px] text-white; }

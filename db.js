@@ -113,6 +113,11 @@ localDb.exec(`
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT,
+    provider TEXT DEFAULT 'youtube',
+    home_team TEXT,
+    away_team TEXT,
+    match_date TEXT,
+    match_time TEXT,
     event_name TEXT,
     teams TEXT,
     competition TEXT,
@@ -124,6 +129,20 @@ localDb.exec(`
     updated_at TEXT NOT NULL
   );
 `);
+
+for (const column of [
+  ['provider', "TEXT DEFAULT 'youtube'"],
+  ['home_team', 'TEXT'],
+  ['away_team', 'TEXT'],
+  ['match_date', 'TEXT'],
+  ['match_time', 'TEXT'],
+]) {
+  try {
+    localDb.exec(`ALTER TABLE live_streams ADD COLUMN ${column[0]} ${column[1]}`);
+  } catch (error) {
+    if (!String(error.message).includes('duplicate column name')) throw error;
+  }
+}
 
 console.log('[Database] Local SQLite ready at:', dbPath);
 
@@ -540,13 +559,18 @@ function mapLiveStream(row) {
     id: row.id,
     title: row.title,
     description: row.description || '',
+    provider: row.provider || 'youtube',
+    homeTeam: row.home_team || '',
+    awayTeam: row.away_team || '',
+    matchDate: row.match_date || '',
+    matchTime: row.match_time || '',
     eventName: row.event_name || row.eventName || '',
     teams: row.teams || '',
     competition: row.competition || '',
     streamUrl: row.stream_url || row.streamUrl || '',
     thumbnailUrl: row.thumbnail_url || row.thumbnailUrl || '',
     scheduledStart: row.scheduled_start || row.scheduledStart || '',
-    status: String(row.status || 'offline').toLowerCase(),
+    status: ['live', 'upcoming', 'offline'].includes(String(row.status || '').toLowerCase()) ? String(row.status).toLowerCase() : 'offline',
     createdAt: row.created_at || row.createdAt,
     updatedAt: row.updated_at || row.updatedAt,
   };
@@ -571,13 +595,18 @@ async function saveLiveStream(item) {
     id: item.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     title: String(item.title || 'Doma United FC live stream').trim(),
     description: String(item.description || '').trim(),
+    provider: String(item.provider || 'youtube').trim().toLowerCase(),
+    homeTeam: String(item.homeTeam || '').trim(),
+    awayTeam: String(item.awayTeam || '').trim(),
+    matchDate: String(item.matchDate || '').trim(),
+    matchTime: String(item.matchTime || '').trim(),
     eventName: String(item.eventName || '').trim(),
     teams: String(item.teams || '').trim(),
     competition: String(item.competition || '').trim(),
     streamUrl: String(item.streamUrl || '').trim(),
     thumbnailUrl: String(item.thumbnailUrl || '').trim(),
     scheduledStart: String(item.scheduledStart || '').trim(),
-    status: String(item.status || 'offline').toLowerCase() === 'live' ? 'live' : 'offline',
+    status: ['live', 'upcoming', 'offline'].includes(String(item.status || '').toLowerCase()) ? String(item.status).toLowerCase() : 'offline',
     createdAt: item.createdAt || now,
     updatedAt: now,
   };
@@ -593,6 +622,11 @@ async function saveLiveStream(item) {
       id: record.id,
       title: record.title,
       description: record.description,
+      provider: record.provider,
+      home_team: record.homeTeam,
+      away_team: record.awayTeam,
+      match_date: record.matchDate || null,
+      match_time: record.matchTime || null,
       event_name: record.eventName,
       teams: record.teams,
       competition: record.competition,
@@ -611,15 +645,18 @@ async function saveLiveStream(item) {
   }
 
   localDb.prepare(`
-    INSERT INTO live_streams (id, title, description, event_name, teams, competition, stream_url, thumbnail_url, scheduled_start, status, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO live_streams (id, title, description, provider, home_team, away_team, match_date, match_time, event_name, teams, competition, stream_url, thumbnail_url, scheduled_start, status, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
-      title = excluded.title, description = excluded.description, event_name = excluded.event_name,
+      title = excluded.title, description = excluded.description, provider = excluded.provider,
+      home_team = excluded.home_team, away_team = excluded.away_team, match_date = excluded.match_date,
+      match_time = excluded.match_time, event_name = excluded.event_name,
       teams = excluded.teams, competition = excluded.competition, stream_url = excluded.stream_url,
       thumbnail_url = excluded.thumbnail_url, scheduled_start = excluded.scheduled_start,
       status = excluded.status, updated_at = excluded.updated_at
-  `).run(record.id, record.title, record.description, record.eventName, record.teams, record.competition,
-    record.streamUrl, record.thumbnailUrl, record.scheduledStart, record.status, record.createdAt, record.updatedAt);
+  `).run(record.id, record.title, record.description, record.provider, record.homeTeam, record.awayTeam,
+    record.matchDate, record.matchTime, record.eventName, record.teams, record.competition, record.streamUrl,
+    record.thumbnailUrl, record.scheduledStart, record.status, record.createdAt, record.updatedAt);
 
   return record;
 }
