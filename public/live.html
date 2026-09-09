@@ -57,13 +57,40 @@
       return stream.thumbnailUrl ? `<img src="${escapeHTML(stream.thumbnailUrl)}" alt="${escapeHTML(stream.title)}"><a class="btn primary absolute bottom-5 left-5" href="${url}" target="_blank" rel="noopener">Open provider player</a>` : `<div class="player-placeholder">This stream uses a provider ingest URL. Open the provider player to watch it.</div>`;
     }
 
+    const dataList = (items, emptyText) => items.length ? `<ul class="mt-3 space-y-2 text-sm">${items.map(item => `<li class="border-b border-[#e3edf8] pb-2">${item}</li>`).join('')}</ul>` : `<p class="mt-3 text-sm text-[#7d96b8]">${emptyText}</p>`;
+    function renderProviderData(data) {
+      const target = document.getElementById('providerData');
+      if (!target) return;
+      const match = data.match || {};
+      const status = String(match.status || '').toUpperCase();
+      const timer = status === 'HT' || status === 'FT' ? status : match.elapsed === null || match.elapsed === undefined ? status : `${match.elapsed}${match.extra ? `+${match.extra}` : ''}'`;
+      const events = (data.events || []).map(event => `${escapeHTML(event.minute || '')} ${escapeHTML(event.type || event.detail || 'Event')} ${escapeHTML(event.player ? `- ${event.player}` : '')}${event.assist ? ` (${escapeHTML(event.assist)})` : ''} <span class="text-[#7d96b8]">${escapeHTML(event.team || '')}</span>`);
+      const lineups = (data.lineups || []).map(lineup => `<div><h4 class="font-black text-[#0a2550]">${escapeHTML(lineup.team)}${lineup.formation ? ` <span class="text-xs font-bold text-[#7d96b8]">${escapeHTML(lineup.formation)}</span>` : ''}</h4><p class="mt-2 text-xs font-bold uppercase text-[#2161c7]">Starting XI</p>${dataList(lineup.startingXI.map(player => escapeHTML(player.name)), 'Not supplied by provider.')}<p class="mt-3 text-xs font-bold uppercase text-[#2161c7]">Substitutes</p>${dataList(lineup.substitutes.map(player => escapeHTML(player.name)), 'Not supplied by provider.')}</div>`).join('');
+      const stats = (data.statistics || []).map(team => `<div><h4 class="font-black text-[#0a2550]">${escapeHTML(team.team)}</h4>${dataList(team.values.map(item => `<span class="font-bold">${escapeHTML(item.type)}</span> <span class="float-right">${escapeHTML(item.value)}</span>`), 'No statistics supplied.')}</div>`).join('');
+      target.innerHTML = `<div class="mt-8 grid gap-6 border-t border-[#e3edf8] pt-7 lg:grid-cols-2"><section><p class="eyebrow">Match centre</p><div class="mt-2 flex items-end justify-between"><p class="text-4xl font-black text-[#0a2550]">${escapeHTML(match.homeScore ?? '-')} <span class="text-xl text-[#7d96b8]">-</span> ${escapeHTML(match.awayScore ?? '-')}</p><strong class="text-xl text-[#a53b3b]">${escapeHTML(timer)}</strong></div><p class="mt-2 text-sm font-bold text-[#6d83a2]">${escapeHTML(match.statusLong || 'Provider status unavailable')} ${match.venue ? `· ${escapeHTML(match.venue)}` : ''}</p></section><section><p class="eyebrow">Match events</p>${dataList(events, 'No events supplied by provider.')}</section><section><p class="eyebrow">Lineups</p><div class="mt-3 space-y-5">${lineups || '<p class="mt-3 text-sm text-[#7d96b8]">Lineups have not been supplied by the provider.</p>'}</div></section><section><p class="eyebrow">Match statistics</p><div class="mt-3 space-y-5">${stats || '<p class="mt-3 text-sm text-[#7d96b8]">No statistics supplied by provider.</p>'}</div></section></div>`;
+    }
+
+    async function loadProviderMatch(stream) {
+      const target = document.getElementById('providerData');
+      if (!target || !stream.fixtureId) return;
+      try {
+        const response = await fetch(`/api/live-match/${encodeURIComponent(stream.fixtureId)}`);
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'Live match data temporarily unavailable. Please try again.');
+        renderProviderData(result.data);
+      } catch (error) {
+        target.innerHTML = `<p class="mt-8 border-t border-[#e3edf8] pt-7 text-sm font-bold text-[#a53b3b]">Live match data temporarily unavailable. Please try again.</p>`;
+      }
+    }
+
     function render(data) {
       const stream = data.active;
       if (!stream) {
         liveState.innerHTML = `<div class="p-8 text-center sm:p-14"><p class="eyebrow">BROADCAST DESK</p><h2 class="mt-3 text-3xl font-black uppercase text-[#0a2550]">${data.next ? 'Next Live' : 'No Live Stream'}</h2><p class="mt-3 text-sm text-[#6d83a2]">${data.next ? 'The next Doma United FC broadcast is scheduled below.' : "There's currently no live Doma United match."}</p>${data.next ? `<div class="next-card text-left"><p class="text-[10px] font-black uppercase tracking-[1px] text-[#2161c7]">Next live</p><h3 class="mt-2 text-xl font-black text-[#0a2550]">${escapeHTML(data.next.homeTeam || data.next.teams || 'Doma United FC')} vs ${escapeHTML(data.next.awayTeam || 'Opponent')}</h3><p class="mt-1 text-sm text-[#6d83a2]">${escapeHTML(data.next.competition || data.next.eventName || 'Club broadcast')} · ${formatStart(data.next.scheduledStart || data.next.matchDate)}</p></div>` : ''}</div>`;
         return;
       }
-      liveState.innerHTML = `<div class="player-frame">${renderPlayer(stream)}</div><div class="live-meta"><div class="flex flex-wrap items-center justify-between gap-4"><span class="live-pill"><span class="live-dot"></span> Live now</span><span class="text-xs font-bold text-[#7d96b8]">${formatStart(stream.scheduledStart || stream.matchDate)}</span></div><p class="mt-5 text-xs font-black uppercase tracking-[2px] text-[#2161c7]">${escapeHTML(stream.competition || 'Doma United FC Broadcast')}</p><h2 class="mt-2 text-3xl font-black text-[#0a2550]">${escapeHTML(stream.homeTeam || stream.teams || 'Doma United FC')} vs ${escapeHTML(stream.awayTeam || 'Opponent')}</h2><p class="mt-2 text-sm font-bold text-[#526b8e]">${escapeHTML(stream.title)} · ${escapeHTML(stream.matchDate || '')} ${escapeHTML(stream.matchTime || '')}</p>${stream.description ? `<p class="mt-5 border-t border-[#e3edf8] pt-5 text-sm leading-7 text-[#6d83a2]">${escapeHTML(stream.description)}</p>` : ''}<a class="btn primary mt-6" href="matches.html">Back to Matches</a></div>`;
+      liveState.innerHTML = `<div class="player-frame">${renderPlayer(stream)}</div><div class="live-meta"><div class="flex flex-wrap items-center justify-between gap-4"><span class="live-pill"><span class="live-dot"></span> Live now</span><span class="text-xs font-bold text-[#7d96b8]">${formatStart(stream.scheduledStart || stream.matchDate)}</span></div><p class="mt-5 text-xs font-black uppercase tracking-[2px] text-[#2161c7]">${escapeHTML(stream.competition || 'Doma United FC Broadcast')}</p><h2 class="mt-2 text-3xl font-black text-[#0a2550]">${escapeHTML(stream.homeTeam || stream.teams || 'Doma United FC')} vs ${escapeHTML(stream.awayTeam || 'Opponent')}</h2><p class="mt-2 text-sm font-bold text-[#526b8e]">${escapeHTML(stream.title)} · ${escapeHTML(stream.matchDate || '')} ${escapeHTML(stream.matchTime || '')}</p>${stream.description ? `<p class="mt-5 border-t border-[#e3edf8] pt-5 text-sm leading-7 text-[#6d83a2]">${escapeHTML(stream.description)}</p>` : ''}<div id="providerData">${stream.fixtureId ? '<p class="mt-8 border-t border-[#e3edf8] pt-7 text-sm text-[#7d96b8]">Loading live match data...</p>' : '<p class="mt-8 border-t border-[#e3edf8] pt-7 text-sm text-[#7d96b8]">No football data fixture has been configured.</p>'}</div><a class="btn primary mt-6" href="matches.html">Back to Matches</a></div>`;
+      loadProviderMatch(stream);
       const video = document.getElementById('streamVideo');
       if (video && stream.playerType === 'hls' && window.Hls && window.Hls.isSupported()) { const hls = new Hls(); hls.loadSource(stream.streamUrl); hls.attachMedia(video); }
     }

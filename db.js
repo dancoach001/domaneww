@@ -114,6 +114,9 @@ localDb.exec(`
     title TEXT NOT NULL,
     description TEXT,
     provider TEXT DEFAULT 'youtube',
+    live_provider TEXT DEFAULT 'api-football',
+    fixture_id TEXT,
+    published INTEGER DEFAULT 1,
     home_team TEXT,
     away_team TEXT,
     match_date TEXT,
@@ -136,6 +139,9 @@ for (const column of [
   ['away_team', 'TEXT'],
   ['match_date', 'TEXT'],
   ['match_time', 'TEXT'],
+  ['live_provider', "TEXT DEFAULT 'api-football'"],
+  ['fixture_id', 'TEXT'],
+  ['published', 'INTEGER DEFAULT 1'],
 ]) {
   try {
     localDb.exec(`ALTER TABLE live_streams ADD COLUMN ${column[0]} ${column[1]}`);
@@ -560,6 +566,9 @@ function mapLiveStream(row) {
     title: row.title,
     description: row.description || '',
     provider: row.provider || 'youtube',
+    liveProvider: row.live_provider || 'api-football',
+    fixtureId: row.fixture_id || '',
+    published: row.published !== 0,
     homeTeam: row.home_team || '',
     awayTeam: row.away_team || '',
     matchDate: row.match_date || '',
@@ -596,6 +605,9 @@ async function saveLiveStream(item) {
     title: String(item.title || 'Doma United FC live stream').trim(),
     description: String(item.description || '').trim(),
     provider: String(item.provider || 'youtube').trim().toLowerCase(),
+    liveProvider: String(item.liveProvider || 'api-football').trim().toLowerCase(),
+    fixtureId: String(item.fixtureId || '').trim(),
+    published: item.published === false || String(item.published).toLowerCase() === 'false' ? 0 : 1,
     homeTeam: String(item.homeTeam || '').trim(),
     awayTeam: String(item.awayTeam || '').trim(),
     matchDate: String(item.matchDate || '').trim(),
@@ -623,6 +635,9 @@ async function saveLiveStream(item) {
       title: record.title,
       description: record.description,
       provider: record.provider,
+      live_provider: record.liveProvider,
+      fixture_id: record.fixtureId || null,
+      published: record.published,
       home_team: record.homeTeam,
       away_team: record.awayTeam,
       match_date: record.matchDate || null,
@@ -645,10 +660,11 @@ async function saveLiveStream(item) {
   }
 
   localDb.prepare(`
-    INSERT INTO live_streams (id, title, description, provider, home_team, away_team, match_date, match_time, event_name, teams, competition, stream_url, thumbnail_url, scheduled_start, status, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO live_streams (id, title, description, provider, live_provider, fixture_id, published, home_team, away_team, match_date, match_time, event_name, teams, competition, stream_url, thumbnail_url, scheduled_start, status, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       title = excluded.title, description = excluded.description, provider = excluded.provider,
+      live_provider = excluded.live_provider, fixture_id = excluded.fixture_id, published = excluded.published,
       home_team = excluded.home_team, away_team = excluded.away_team, match_date = excluded.match_date,
       match_time = excluded.match_time, event_name = excluded.event_name,
       teams = excluded.teams, competition = excluded.competition, stream_url = excluded.stream_url,

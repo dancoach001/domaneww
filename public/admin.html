@@ -504,6 +504,9 @@
               <label class="field">Match time<input name="matchTime" type="time" required></label>
               <label class="field">Stream provider<select name="provider"><option value="youtube">YouTube Live</option><option value="iframe">Other iframe provider</option><option value="hls">HLS provider</option></select></label>
               <label class="field">Stream status<select name="status"><option value="upcoming">UPCOMING</option><option value="live">LIVE</option><option value="offline">OFFLINE</option></select></label>
+              <label class="field">Football data provider<select name="liveProvider"><option value="api-football">API-Football</option></select></label>
+              <label class="field">Provider fixture ID<input name="fixtureId" inputmode="numeric" pattern="[0-9]+" placeholder="API-Football fixture ID"><span class="mt-2 block text-[11px] font-semibold text-[#7d96b8]">Provider data supplies the score, minute, events, lineups and statistics.</span></label>
+              <label class="field flex items-center gap-3 pt-6"><input name="published" type="checkbox" checked class="h-4 w-4 accent-[#2161c7]"><span>Publish live match page</span></label>
               <label class="field md:col-span-2">YouTube Live broadcast URL<input name="streamUrl" type="url" required placeholder="https://www.youtube.com/watch?v=VIDEO_ID"><span class="mt-2 block text-[11px] font-semibold text-[#7d96b8]">Paste the normal YouTube watch, live, youtu.be, or embed URL. It will play inside this website.</span></label>
               <label class="field">Match / event name<input name="eventName" placeholder="Matchday 12"></label>
               <label class="field">Scheduled start<input name="scheduledStart" type="datetime-local"></label>
@@ -1127,7 +1130,7 @@
           fetch('/api/gallery').then(r => r.json()).catch(() => null),
           fetch('/api/players').then(r => r.json()).catch(() => null),
           fetch('/api/admin-matches').then(r => r.json()).catch(() => null),
-          fetch('/api/live-streams').then(r => r.json()).catch(() => null)
+          fetch('/api/admin/live-streams', { headers: getAdminHeaders() }).then(r => r.json()).catch(() => null)
         ]);
 
         if (newsRes && newsRes.success && Array.isArray(newsRes.data)) {
@@ -1543,6 +1546,7 @@
       if (type === 'liveStreams') {
         document.querySelector('[data-section="live-streams"]').click();
         form.elements.status.value = item.status || 'offline';
+        form.elements.published.checked = item.published !== false;
         showNotice('Loaded stream for editing. Save to update it.');
         return;
       }
@@ -1571,6 +1575,7 @@
       return `
         <div class="flex shrink-0 gap-2">
 
+          ${type === 'liveStreams' ? `<button type="button" class="check-provider-item rounded-md border border-[#cbdcf0] px-3 py-2 text-[10px] font-black uppercase text-[#2161c7]" data-id="${id}">Check provider</button>` : ''}
           <button
             type="button"
             class="edit-item rounded-md border border-[#cbdcf0] px-3 py-2 text-[10px] font-black uppercase text-[#2161c7]"
@@ -2430,6 +2435,7 @@
                 const current = state.liveStreams.find((stream) => stream.id === values.id);
                 values.thumbnailUrl = current?.thumbnailUrl || '';
               }
+              values.published = form.elements.published.checked;
               delete values.thumbnail;
             }
 
@@ -2623,6 +2629,20 @@
             .catch(error => showNotice(error.message || 'Stream action failed.', true));
         }
 
+        const providerCheck = event.target.closest('.check-provider-item');
+        if (providerCheck) {
+          const stream = state.liveStreams.find(item => item.id === providerCheck.dataset.id);
+          if (!stream?.fixtureId) return showNotice('Add a provider fixture ID first.', true);
+          fetch(`/api/live-match/${encodeURIComponent(stream.fixtureId)}`)
+            .then(response => response.json().then(data => ({ response, data })))
+            .then(({ response, data }) => {
+              if (!response.ok || !data.success) throw new Error(data.error || 'Provider check failed.');
+              const match = data.data.match || {};
+              showNotice(`Provider: ${match.statusLong || match.status || 'Status unavailable'} · ${match.homeScore ?? '-'} - ${match.awayScore ?? '-'}`);
+            })
+            .catch(error => showNotice(error.message, true));
+        }
+
       }
     );
 
@@ -2668,7 +2688,6 @@
         );
 
         return;
-
       }
 
 

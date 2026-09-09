@@ -60,6 +60,9 @@ CREATE TABLE IF NOT EXISTS public.live_streams (
     title TEXT NOT NULL,
     description TEXT,
     provider TEXT NOT NULL DEFAULT 'youtube',
+    live_provider TEXT NOT NULL DEFAULT 'api-football',
+    fixture_id TEXT,
+    published BOOLEAN NOT NULL DEFAULT TRUE,
     home_team TEXT,
     away_team TEXT,
     match_date DATE,
@@ -76,6 +79,9 @@ CREATE TABLE IF NOT EXISTS public.live_streams (
 );
 
 ALTER TABLE public.live_streams ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'youtube';
+ALTER TABLE public.live_streams ADD COLUMN IF NOT EXISTS live_provider TEXT NOT NULL DEFAULT 'api-football';
+ALTER TABLE public.live_streams ADD COLUMN IF NOT EXISTS fixture_id TEXT;
+ALTER TABLE public.live_streams ADD COLUMN IF NOT EXISTS published BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE public.live_streams ADD COLUMN IF NOT EXISTS home_team TEXT;
 ALTER TABLE public.live_streams ADD COLUMN IF NOT EXISTS away_team TEXT;
 ALTER TABLE public.live_streams ADD COLUMN IF NOT EXISTS match_date DATE;

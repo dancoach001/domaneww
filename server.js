@@ -11,6 +11,7 @@ const multer = require('multer');
 dotenv.config();
 
 const db = require('./db.js');
+const liveFootballProvider = require('./live-football-provider.js');
 
 // Ensure public uploads directory exists
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
@@ -849,7 +850,7 @@ function youtubeEmbedUrl(streamUrl) {
     if (!videoId && (parsed.hostname === 'youtu.be' || parsed.hostname.endsWith('.youtu.be'))) videoId = parsed.pathname.split('/').filter(Boolean)[0];
     if (!videoId && parsed.pathname.startsWith('/live/')) videoId = parsed.pathname.split('/')[2];
     if (!videoId && parsed.pathname.startsWith('/embed/')) videoId = parsed.pathname.split('/')[2];
-    return videoId ? `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0` : null;
+    return videoId ? `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?rel=0` : null;
   } catch (error) {
     return null;
   }
@@ -870,22 +871,55 @@ function publicStream(record) {
   return { ...record, playerType, embedUrl: playerType === 'youtube' ? youtubeEmbedUrl(record.streamUrl) : record.streamUrl };
 }
 
+function isYouTubeUrl(streamUrl) {
+  try {
+    const hostname = new URL(streamUrl).hostname.toLowerCase();
+    return hostname === 'youtube.com' || hostname.endsWith('.youtube.com') || hostname === 'youtu.be' || hostname.endsWith('.youtu.be');
+  } catch (error) {
+    return false;
+  }
+}
+
 app.get('/api/live-streams', async (req, res) => {
   try {
     const streams = await db.getLiveStreams();
-    const active = streams.find((stream) => stream.status === 'live');
+    const active = streams.find((stream) => stream.status === 'live' && stream.published !== false);
     const next = streams
-      .filter((stream) => stream.status !== 'live' && stream.scheduledStart)
+      .filter((stream) => stream.published !== false && stream.status !== 'live' && stream.scheduledStart)
       .sort((a, b) => new Date(a.scheduledStart) - new Date(b.scheduledStart))[0] || null;
-    res.json({ success: true, active: active ? publicStream(active) : null, next: next ? publicStream(next) : null, data: streams.map(publicStream) });
+    res.json({ success: true, active: active ? publicStream(active) : null, next: next ? publicStream(next) : null, data: streams.filter((stream) => stream.published !== false).map(publicStream) });
   } catch (error) {
     console.error('Error fetching live streams:', error.message);
     res.status(500).json({ success: false, error: 'Unable to load live streams.' });
   }
 });
 
+app.get('/api/admin/live-streams', requireAdmin, async (req, res) => {
+  try {
+    const streams = await db.getLiveStreams();
+    res.json({ success: true, data: streams.map(publicStream) });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Unable to load live streams.' });
+  }
+});
+
+app.get('/api/live-match/:fixtureId', async (req, res) => {
+  const fixtureId = String(req.params.fixtureId || '').trim();
+  if (!/^\d+$/.test(fixtureId)) return res.status(400).json({ success: false, error: 'A numeric provider fixture ID is required.' });
+
+  try {
+    const data = await liveFootballProvider.getLiveFixture(fixtureId);
+    res.json({ success: true, data });
+  } catch (error) {
+    const status = error.code === 'LIVE_FIXTURE_NOT_FOUND' ? 404 : error.code === 'LIVE_PROVIDER_NOT_CONFIGURED' ? 503 : 502;
+    console.error('Live football provider failed:', error.message);
+    res.status(status).json({ success: false, error: error.message || 'Live match data temporarily unavailable. Please try again.' });
+  }
+});
+
 app.post('/api/live-streams', requireAdmin, async (req, res) => {
   try {
+    if (String(req.body?.provider || 'youtube').toLowerCase() === 'youtube' && !isYouTubeUrl(req.body?.streamUrl)) throw new Error('Use a valid YouTube watch, youtu.be, live, or embed URL.');
     const record = await db.saveLiveStream(req.body || {});
     broadcastEvent('live-streams', 'save', record);
     res.json({ success: true, data: publicStream(record) });
@@ -897,6 +931,7 @@ app.post('/api/live-streams', requireAdmin, async (req, res) => {
 
 app.put('/api/live-streams/:id', requireAdmin, async (req, res) => {
   try {
+    if (String(req.body?.provider || 'youtube').toLowerCase() === 'youtube' && !isYouTubeUrl(req.body?.streamUrl)) throw new Error('Use a valid YouTube watch, youtu.be, live, or embed URL.');
     const record = await db.saveLiveStream({ ...req.body, id: req.params.id });
     broadcastEvent('live-streams', 'update', record);
     res.json({ success: true, data: publicStream(record) });
